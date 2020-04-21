@@ -72,37 +72,6 @@ static void rm_trav_buffer_free(RmTravBuffer *self) {
 // ACTUAL WORK HERE //
 //////////////////////
 
-// Symbolic links may contain relative paths, that are relative to the symbolic
-// link location.  When using readlink(), those relative paths are returned but
-// may not make sense depending from where rmlint was run. This function takes
-// the original link_path and the (potentially relatiev) path it is pointing to
-// and constructs an absolute path out of it.
-//
-// See also: https://github.com/sahib/rmlint/issues/333
-static char *rm_traverse_symlink_path(const char *path) {
-    char target[PATH_MAX + 1];
-    int len = readlink(path, target, PATH_MAX);
-    if(len == -1) {
-        rm_log_debug_line("failed to follow symbolic link of %s: %s", path,
-                          g_strerror(errno));
-        return NULL;
-    }
-    target[len] = '\0';
-
-    // Most links will already be absolute.
-    if(g_path_is_absolute(target)) {
-        return realpath(target, NULL);
-    }
-
-    char *link_dir_path = g_path_get_dirname(path);
-    char *full_path = g_build_path(G_DIR_SEPARATOR_S, link_dir_path, target, NULL);
-    char *clean_path = realpath(full_path, NULL);
-
-    g_free(link_dir_path);
-    g_free(full_path);
-    return clean_path;
-}
-
 bool rm_traverse_file(RmSession *session, RmStat *statp, const char *path, bool is_prefd,
                       unsigned long path_index, RmLintType file_type, bool is_symlink,
                       bool is_hidden, bool is_on_subvol_fs, short depth,
@@ -146,20 +115,8 @@ bool rm_traverse_file(RmSession *session, RmStat *statp, const char *path, bool 
         }
     }
 
-    char *resolved_path = NULL;
-    if(is_symlink && cfg->follow_symlinks) {
-        resolved_path = rm_traverse_symlink_path(path);
-        if(resolved_path == NULL) {
-            return FALSE;
-        }
-        path = resolved_path;
-        is_symlink = false;
-    }
-
     RmFile *file =
         rm_file_new(session, path, statp, file_type, is_prefd, path_index, depth, NULL);
-
-    g_free(resolved_path);
 
     if(file != NULL) {
         file->is_symlink = is_symlink;

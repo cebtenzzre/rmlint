@@ -730,14 +730,17 @@ static void rm_shred_discard_file(RmFile *file, _UNUSED gpointer user_data) {
 static void rm_shred_push_queue(RmFile *file) {
     if(file->hash_offset == 0) {
         /* first-timer; lookup disk offset */
+        RmOff disk_offset = (RmOff)-1;
         if(file->session->cfg->build_fiemap &&
            !rm_mounts_is_nonrotational(file->session->mounts, rm_file_dev(file))) {
             RM_DEFINE_PATH(file);
-            file->disk_offset = rm_offset_get_from_path(file_path, 0, NULL);
-        } else {
-            /* use inode number instead of disk offset */
-            file->disk_offset = rm_file_inode(file);
+            disk_offset = rm_offset_get_from_path(file_path, 0, NULL);
         }
+        if(disk_offset == (RmOff)-1) {
+            /* use inode number instead of disk offset */
+            disk_offset = rm_file_inode(file);
+        }
+        file->disk_offset = disk_offset;
     }
     rm_mds_push_task(rm_shred_disk(file, file->session), rm_file_dev(file),
         file->disk_offset, NULL, file);

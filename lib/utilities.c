@@ -1187,6 +1187,9 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
     RmOff result = 0;
     bool done = FALSE;
     bool first = TRUE;
+#if _RM_OFFSET_DEBUG
+    int errnum = 0;
+#endif
     rm_util_set_nullable_bool(is_last, FALSE);
     rm_util_set_nullable_bool(is_inline, FALSE);
 
@@ -1202,8 +1205,11 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
         if(fm == NULL) {
             /* got no extent data */
 #if _RM_OFFSET_DEBUG
+            errnum = errno;
             rm_log_info_line(_("rm_offset_get_fiemap: got no fiemap for %d"), fd);
+            errno = errnum;
 #endif
+            result = (RmOff)-1;
             break;
         }
 
@@ -1281,12 +1287,14 @@ RmOff rm_offset_get_from_path(const char *path, RmOff file_offset,
 RmOff rm_offset_get_from_fd(_UNUSED int fd, _UNUSED RmOff file_offset,
                             _UNUSED RmOff *file_offset_next, _UNUSED bool *is_last,
                             _UNUSED bool *is_inline) {
-    return 0;
+    errno = EOPNOTSUPP;
+    return (RmOff)-1;
 }
 
 RmOff rm_offset_get_from_path(_UNUSED const char *path, _UNUSED RmOff file_offset,
                               _UNUSED RmOff *file_offset_next) {
-    return 0;
+    errno = EOPNOTSUPP;
+    return (RmOff)-1;
 }
 
 #endif

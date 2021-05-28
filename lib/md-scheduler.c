@@ -408,6 +408,9 @@ void rm_mds_push_task(RmMDSDevice *device, dev_t dev, gint64 offset, const char 
                       const gpointer task_data) {
     if(device->is_rotational && offset == -1) {
         offset = rm_offset_get_from_path(path, 0, NULL);
+        if(offset == -1) {
+            offset = 0;
+        }
     }
 
     RmMDSTask *task = rm_mds_task_new(dev, offset, task_data);

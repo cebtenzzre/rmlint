@@ -100,8 +100,14 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
 
         RmOff physical_1 = rm_offset_get_from_fd(fd1, logical_current, &logical_next_1,
                                                  &is_last_1, &is_inline_1);
+        if (physical_1 == (RmOff)-1 && errno == EOPNOTSUPP) {
+            return RM_LINK_NONE;
+        }
         RmOff physical_2 = rm_offset_get_from_fd(fd2, logical_current, &logical_next_2,
                                                  &is_last_2, &is_inline_2);
+        if (physical_2 == (RmOff)-1 && errno == EOPNOTSUPP) {
+            return RM_LINK_NONE;
+        }
 
         if(is_last_1 != is_last_2) {
             return RM_LINK_NONE;
@@ -130,13 +136,6 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
 
         if(is_inline_1 || is_inline_2) {
             return RM_LINK_INLINE_EXTENTS;
-        }
-
-        if(physical_1 == 0) {
-#if _RM_OFFSET_DEBUG
-            rm_log_debug_line("Can't determine whether files are clones");
-#endif
-            return RM_LINK_ERROR;
         }
 
 #if _RM_OFFSET_DEBUG

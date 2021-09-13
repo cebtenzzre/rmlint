@@ -83,7 +83,7 @@
 #endif
 
 
-RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
+RmLinkType rm_reflink_type_from_fd(int fd1, int fd2) {
 #if HAVE_FIEMAP
 
     RmOff logical_current = 0;
@@ -92,7 +92,6 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
     bool is_last_2 = false;
     bool is_inline_1 = false;
     bool is_inline_2 = false;
-    bool at_least_one_checked = false;
 
     while(!rm_session_was_aborted()) {
         RmOff logical_next_1 = 0;
@@ -111,10 +110,6 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
 
         if(is_last_1 != is_last_2) {
             return RM_LINK_NONE;
-        }
-
-        if(is_last_1 && is_last_2 && at_least_one_checked) {
-            return RM_LINK_REFLINK;
         }
 
         if(physical_1 != physical_2) {
@@ -150,7 +145,7 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
             return RM_LINK_ERROR;
         }
 
-        if(logical_next_1 >= (guint64)file_size) {
+        if(is_last_1) {
             /* phew, we got to the end */
 #if _RM_OFFSET_DEBUG
             rm_log_debug_line("Files are clones (share same data)")
@@ -159,7 +154,6 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2, guint64 file_size) {
         }
 
         logical_current = logical_next_1;
-        at_least_one_checked = true;
     }
 
     return RM_LINK_ERROR;

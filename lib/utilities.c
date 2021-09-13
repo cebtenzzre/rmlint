@@ -1214,9 +1214,9 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
         }
 
         if(fm->fm_mapped_extents == 0) {
-#if _RM_OFFSET_DEBUG
-            rm_log_info_line(_("rm_offset_get_fiemap: got no extents for %d"), fd);
-#endif
+            if(file_offset != 0) {
+                rm_log_warning_line(_("rm_offset_get_fiemap: got no extents for %d at offset %" G_GUINT64_FORMAT), fd, file_offset);
+            }
             done = TRUE;
         } else {
             /* retrieve data from fiemap */
@@ -1412,7 +1412,7 @@ RmLinkType rm_util_link_type(const char *path1, const char *path2, bool use_fiem
     }
 
     if(use_fiemap) {
-        RmLinkType reflink_type = rm_reflink_type_from_fd(fd1, fd2, stat1.st_size);
+        RmLinkType reflink_type = rm_reflink_type_from_fd(fd1, fd2);
         RM_RETURN(reflink_type);
     }
     RM_RETURN(RM_LINK_NONE);

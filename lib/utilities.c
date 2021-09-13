@@ -1190,11 +1190,11 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
 #if _RM_OFFSET_DEBUG
     int errnum = 0;
 #endif
+    struct fiemap_extent fm_last;
     rm_util_set_nullable_bool(is_last, FALSE);
     rm_util_set_nullable_bool(is_inline, FALSE);
 
-    /* used for detecting contiguous extents */
-    unsigned long expected = 0;
+    memset(&fm_last, 0, sizeof(fm_last));
 
     fsync(fd);
 
@@ -1228,7 +1228,9 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
                 first = FALSE;
             } else {
                 /* check if subsequent extents are contiguous */
-                if(fm_ext.fe_physical != expected) {
+                unsigned long expected_dense = fm_last.fe_physical + fm_last.fe_length;
+                unsigned long expected = fm_last.fe_physical + fm_ext.fe_logical - fm_last.fe_logical;
+                if(fm_ext.fe_physical != expected || fm_ext.fe_physical != expected_dense) {
                     /* current extent is not contiguous with previous, so we can stop */
                     g_free(fm);
                     break;
@@ -1252,7 +1254,7 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
 
             /* move offsets in preparation for reading next extent */
             file_offset = fm_ext.fe_logical + fm_ext.fe_length;
-            expected = fm_ext.fe_physical + fm_ext.fe_length;
+            fm_last = fm_ext;
         }
 
         g_free(fm);

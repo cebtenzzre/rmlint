@@ -144,6 +144,21 @@ bool rm_traverse_file(RmSession *session, RmStat *statp, const char *path, bool 
                 rm_xattr_read_hash(file, session);
             }
         }
+
+        if(!S_ISREG(statp->st_mode)) {
+            file->phys_offset = (RmOff)-1;
+        } else if(session->mounts != NULL) {
+            struct libmnt_fs *fs = mnt_table_find_mountpoint(session->mounts->mount_table, path, MNT_ITER_BACKWARD);
+            if(fs) {
+                file->mnt_fstype = mnt_fs_get_fstype(fs);
+                file->mnt_source = mnt_fs_get_source(fs);
+
+                bool is_inline = false;
+                RmOff physical = rm_offset_get_from_path(path, 0, NULL, NULL, &is_inline);
+                file->phys_offset = is_inline ? (RmOff)-1 : physical;
+            }
+        }
+
         return TRUE;
     }
     return FALSE;

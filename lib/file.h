@@ -122,6 +122,9 @@ typedef struct RmFile {
         RmOff disk_offset;
     };
 
+    /* Actual physical offset of a file's first extent (or -1) */
+    RmOff phys_offset;
+
     /* File modification date/time
      * */
     gdouble mtime;
@@ -162,6 +165,17 @@ typedef struct RmFile {
      * Only filled if type is RM_LINT_TYPE_PART_OF_DIRECTORY.
      */
     struct RmDirectory *parent_dir;
+
+    /* Number of reflinks in this reflink set.
+     * This is used for the 'cC'-sortcriteria. */
+    guint *reflink_count;
+
+    /* Mount filesystem type */
+    const char *mnt_fstype;
+
+    /* Mount source */
+    const char *mnt_source;
+
 
     /*----- 32-bit types ----- */
 
@@ -333,6 +347,11 @@ RmFile *rm_file_ref(RmFile *file);
 void rm_file_hardlink_add(RmFile *head, RmFile *link);
 
 /**
+ * @brief add link to head's reflinks (create reflink count if necessary)
+ */
+void rm_file_reflink_add(RmFile *head, RmFile *link);
+
+/**
  * @brief add guest to host's cluster (create cluster if necessary)
  */
 void rm_file_cluster_add(RmFile *host, RmFile *guest);
@@ -399,6 +418,10 @@ static inline ino_t rm_file_parent_inode(const RmFile *file) {
 
 static inline dev_t rm_file_parent_dev(const RmFile *file) {
     return rm_node_get_dev(file->node->parent);
+}
+
+static inline dev_t rm_file_reflink_count(const RmFile *file) {
+    return file->reflink_count ? *file->reflink_count : 1;
 }
 
 /**

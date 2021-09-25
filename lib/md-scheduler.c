@@ -407,7 +407,7 @@ gboolean rm_mds_device_is_rotational(RmMDSDevice *device) {
 void rm_mds_push_task(RmMDSDevice *device, dev_t dev, gint64 offset, const char *path,
                       const gpointer task_data) {
     if(device->is_rotational && offset == -1) {
-        offset = rm_offset_get_from_path(path, 0, NULL);
+        offset = rm_offset_get_from_path(path, 0, NULL, NULL, NULL);
         if(offset == -1) {
             offset = 0;
         }

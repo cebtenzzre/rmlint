@@ -140,6 +140,8 @@ static int rm_rank_criterion(unsigned char criterion, const RmFile *a, const RmF
         return sign * SIGN_DIFF(a->depth, b->depth);
     case 'h':
         return sign * SIGN_DIFF(a->link_count, b->link_count);
+    case 'c':
+        return sign * SIGN_DIFF(rm_file_reflink_count(a), rm_file_reflink_count(b));
     case 'o':
         return sign * SIGN_DIFF(a->outer_link_count, b->outer_link_count);
     case 'p':

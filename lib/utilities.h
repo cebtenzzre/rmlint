@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
+#include <libmount.h>
 
 /* Pat(h)tricia Trie implementation */
 #include "pathtricia.h"
@@ -331,6 +332,7 @@ typedef struct RmMountTable {
     GHashTable *nfs_table;
     GHashTable *evilfs_table;
     GHashTable *reflinkfs_table;
+    struct libmnt_table *mount_table;
 } RmMountTable;
 
 /**
@@ -406,7 +408,7 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
  * @return the physical offset starting from the disk.
  */
 RmOff rm_offset_get_from_path(const char *path, RmOff file_offset,
-                              RmOff *file_offset_next);
+                              RmOff *file_offset_next, bool *is_last, bool *is_inline);
 
 /**
  * @brief Test if two files have identical fiemaps.

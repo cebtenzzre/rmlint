@@ -438,6 +438,7 @@ Original Detection Options
     - **r**: keep paths matching regex            **R**: keep path not matching regex
     - **x**: keep basenames matching regex        **X**: keep basenames not matching regex
     - **h**: keep file with lowest hardlink count **H**: keep file with highest hardlink count
+    - **c**: keep file with lowest reflink count  **C**: keep file with highest reflink count
     - **o**: keep file with lowest number of hardlinks outside of the paths traversed by ``rmlint``.
     - **O**: keep file with highest number of hardlinks outside of the paths traversed by ``rmlint``.
 

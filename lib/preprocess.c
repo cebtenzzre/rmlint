@@ -123,11 +123,33 @@ static RmOff rm_pp_handler_other_lint(const RmSession *session) {
 
 
 /* Compare func to sort two RmFiles into "hardlink" order.  Sorting a list of
- * files according to this func will guarantee that hardlinked files are
- * adjacent to each other.  Hardlinks can then be found by finding
- * adjacent files where rm_file_cmp_hardlink(a, b) == 0 */
- static gint rm_file_cmp_hardlink(const RmFile *a, const RmFile *b) {
+ * files according to this func will guarantee that reflinked files are
+ * adjacent to each other, and that hardlinked files are adjacent within a
+ * reflink group.  Hardlinks can then be found by finding adjacent files where
+ * rm_file_cmp_hardlink_quick(a, b) == 0 */
+static gint rm_file_cmp_hardlink(const RmFile *a, const RmFile *b) {
+    RETURN_IF_NONZERO(g_strcmp0(a->mnt_fstype, b->mnt_fstype));
+    RETURN_IF_NONZERO(g_strcmp0(a->mnt_source, b->mnt_source));
+    RETURN_IF_NONZERO(SIGN_DIFF(a->phys_offset, b->phys_offset));
     RETURN_IF_NONZERO(SIGN_DIFF(a->actual_file_size, b->actual_file_size));
+    RETURN_IF_NONZERO(SIGN_DIFF(rm_file_dev(a), rm_file_dev(b)));
+    return SIGN_DIFF(rm_file_inode(a), rm_file_inode(b));
+}
+
+static bool rm_file_is_reflink(const RmFile *a, const RmFile *b) {
+    if(a->mnt_fstype == NULL || b->mnt_fstype == NULL \
+       || strcmp(a->mnt_fstype, b->mnt_fstype) != 0) {
+        return false;
+    }
+    if(a->mnt_source == NULL || b->mnt_source == NULL \
+       || strcmp(a->mnt_source, b->mnt_source) != 0) {
+        return false;
+    }
+    return a->phys_offset != (RmOff)-1 && b->phys_offset != (RmOff)-1 \
+        && a->phys_offset == b->phys_offset;
+}
+
+static gint rm_file_cmp_hardlink_quick(const RmFile *a, const RmFile *b) {
     RETURN_IF_NONZERO(SIGN_DIFF(rm_file_dev(a), rm_file_dev(b)));
     return SIGN_DIFF(rm_file_inode(a), rm_file_inode(b));
 }
@@ -192,15 +214,17 @@ static gint rm_pp_remove_path_doubles(RmSession *session, GQueue *files) {
 
 /* bundle or remove hardlinks */
 static gint rm_pp_bundle_hardlinks(RmSession *session, GQueue *files) {
+    GList *i, *other_i;
     guint removed = 0;
+
     /* sort so that files are in size order, and hardlinks are adjacent and
      * in -S criteria order, */
     g_queue_sort(files, (GCompareDataFunc)rm_file_cmp_hardlink_full, session);
 
-    for(GList *i = files->head; i && i->next; ) {
+    for(i = files->head; i && i->next; ) {
         RmFile *this = i->data;
         RmFile *next = i->next->data;
-        if(rm_file_cmp_hardlink(this, next) == 0) {
+        if(rm_file_cmp_hardlink_quick(this, next) == 0) {
             // it's a hardlink of prev
             if(session->cfg->find_hardlinked_dupes) {
                 /* bundle next file under previous->hardlinks */
@@ -214,6 +238,19 @@ static gint rm_pp_bundle_hardlinks(RmSession *session, GQueue *files) {
         }
         else {
             i = i->next;
+        }
+    }
+
+    i = files->head;
+    other_i = i ? i->next : NULL;
+    for (; i && other_i; other_i = other_i->next) {
+        RmFile *this = i->data;
+        RmFile *other = other_i->data;
+        if(rm_file_is_reflink(this, other)) {
+            // it's a reflink of prev
+            rm_file_reflink_add(this, other);
+        } else {
+            i = other_i;
         }
     }
     return removed;

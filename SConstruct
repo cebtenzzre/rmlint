@@ -693,10 +693,13 @@ conf.check_pkg('gio-unix-2.0', 'HAVE_GIO_UNIX', required=False)
 conf.env['HAVE_BLKID'] = 0
 conf.check_pkg('blkid', 'HAVE_BLKID', required=False)
 
+conf.env['HAVE_LIBMOUNT'] = 0
+conf.check_pkg('mount >= 2.23', 'HAVE_LIBMOUNT', required=True)
+
 conf.env['HAVE_JSON_GLIB'] = 0
 conf.check_pkg('json-glib-1.0', 'HAVE_JSON_GLIB', required=True)
 
-packages = ['glib-2.0', 'json-glib-1.0']
+packages = ['glib-2.0', 'json-glib-1.0', 'mount']
 if conf.env['HAVE_BLKID']:
     packages.append('blkid')
 

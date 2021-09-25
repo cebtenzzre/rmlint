@@ -99,6 +99,7 @@ RmFile *rm_file_new(struct RmSession *session, const char *path, RmStat *statp,
     self->is_symlink = false;
     self->path_index = path_index;
     self->outer_link_count = -1;
+    self->phys_offset = (RmOff)-1;
 
     self->ref_count = 1;
     return self;
@@ -154,6 +155,13 @@ static gint rm_file_unref_impl(RmFile *file, gboolean unref_hardlinks) {
         }
         else if(file->hardlinks->length==0) {
             g_queue_free(file->hardlinks);
+        }
+    }
+
+    if(file->reflink_count) {
+        guint refs = --(*file->reflink_count);
+        if(!refs) {
+            g_free(file->reflink_count);
         }
     }
 
@@ -222,6 +230,17 @@ void rm_file_hardlink_add(RmFile *head, RmFile *link) {
     if(link != head) {
         link->hardlinks = head->hardlinks;
         g_queue_push_tail(head->hardlinks, link);
+    }
+}
+
+void rm_file_reflink_add(RmFile *head, RmFile *link) {
+    if(!head->reflink_count) {
+        head->reflink_count = g_malloc0(sizeof(guint));
+        *head->reflink_count = 1;
+    }
+    if(link != head) {
+        link->reflink_count = head->reflink_count;
+        ++(*head->reflink_count);
     }
 }
 

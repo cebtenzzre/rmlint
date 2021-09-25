@@ -713,7 +713,7 @@ typedef struct RmMountEntry {
 } RmMountEntry;
 
 typedef struct RmMountEntries {
-    GList *mnt_entries;
+    struct libmnt_table *table;
     GList *entries;
     GList *current;
 } RmMountEntries;
@@ -729,7 +729,6 @@ static void rm_mount_list_close(RmMountEntries *self) {
         g_slice_free(RmMountEntry, entry);
     }
 
-    g_list_free_full(self->mnt_entries, (GDestroyNotify)g_unix_mount_free);
     g_list_free(self->entries);
     g_slice_free(RmMountEntries, self);
 }
@@ -757,20 +756,29 @@ static bool fs_supports_reflinks(_UNUSED char *fstype, _UNUSED char *mountpoint)
 static RmMountEntries *rm_mount_list_open(RmMountTable *table) {
     RmMountEntries *self = g_slice_new(RmMountEntries);
 
-    self->mnt_entries = g_unix_mounts_get(NULL);
+    self->table = mnt_new_table();
     self->entries = NULL;
     self->current = NULL;
 
-    for(GList *iter = self->mnt_entries; iter; iter = iter->next) {
-        RmMountEntry *wrap_entry = g_slice_new(RmMountEntry);
-        GUnixMountEntry *entry = iter->data;
+    if(self->table == NULL || mnt_table_parse_mtab(self->table, NULL) != 0) {
+        rm_log_perror("failed to read mount table");
+        mnt_free_table(self->table);
+        g_slice_free(RmMountEntries, self);
+        return NULL;
+    }
 
-        wrap_entry->fsname = g_strdup(g_unix_mount_get_device_path(entry));
-        wrap_entry->dir = g_strdup(g_unix_mount_get_mount_path(entry));
-        wrap_entry->type = g_strdup(g_unix_mount_get_fs_type(entry));
+    struct libmnt_fs *fs;
+    struct libmnt_iter *iter = mnt_new_iter(MNT_ITER_FORWARD);
+    while(mnt_table_next_fs(self->table, iter, &fs) == 0) {
+        RmMountEntry *wrap_entry = g_slice_new(RmMountEntry);
+
+        wrap_entry->fsname = g_strdup(mnt_fs_get_source(fs));
+        wrap_entry->dir = g_strdup(mnt_fs_get_target(fs));
+        wrap_entry->type = g_strdup(mnt_fs_get_fstype(fs));
 
         self->entries = g_list_prepend(self->entries, wrap_entry);
     }
+    mnt_free_iter(iter);
 
     RmMountEntry *wrap_entry = NULL;
     while((wrap_entry = rm_mount_list_next(self))) {
@@ -876,6 +884,8 @@ static bool rm_mounts_create_tables(RmMountTable *self, bool force_fiemap) {
     if(mnt_entries == NULL) {
         return false;
     }
+
+    self->mount_table = mnt_entries->table;
 
     while((entry = rm_mount_list_next(mnt_entries))) {
         RmStat stat_buf_folder;
@@ -995,6 +1005,7 @@ void rm_mounts_table_destroy(RmMountTable *self) {
     g_hash_table_unref(self->nfs_table);
     g_hash_table_unref(self->evilfs_table);
     g_hash_table_unref(self->reflinkfs_table);
+    mnt_free_table(self->mount_table);
     g_slice_free(RmMountTable, self);
 }
 
@@ -1269,13 +1280,13 @@ RmOff rm_offset_get_from_fd(int fd, RmOff file_offset, RmOff *file_offset_next,
 }
 
 RmOff rm_offset_get_from_path(const char *path, RmOff file_offset,
-                              RmOff *file_offset_next) {
+                              RmOff *file_offset_next, bool *is_last, bool *is_inline) {
     int fd = rm_sys_open(path, O_RDONLY);
     if(fd == -1) {
         rm_log_info("Error opening %s in rm_offset_get_from_path\n", path);
         return 0;
     }
-    RmOff result = rm_offset_get_from_fd(fd, file_offset, file_offset_next, NULL, NULL);
+    RmOff result = rm_offset_get_from_fd(fd, file_offset, file_offset_next, is_last, is_inline);
     rm_sys_close(fd);
     return result;
 }
@@ -1290,7 +1301,8 @@ RmOff rm_offset_get_from_fd(_UNUSED int fd, _UNUSED RmOff file_offset,
 }
 
 RmOff rm_offset_get_from_path(_UNUSED const char *path, _UNUSED RmOff file_offset,
-                              _UNUSED RmOff *file_offset_next) {
+                              _UNUSED RmOff *file_offset_next, _UNUSED bool *is_last,
+                              _UNUSED bool *is_inline) {
     errno = EOPNOTSUPP;
     return (RmOff)-1;
 }

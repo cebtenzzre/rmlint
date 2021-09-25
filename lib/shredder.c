@@ -734,7 +734,7 @@ static void rm_shred_push_queue(RmFile *file) {
         if(file->session->cfg->build_fiemap &&
            !rm_mounts_is_nonrotational(file->session->mounts, rm_file_dev(file))) {
             RM_DEFINE_PATH(file);
-            disk_offset = rm_offset_get_from_path(file_path, 0, NULL);
+            disk_offset = rm_offset_get_from_path(file_path, 0, NULL, NULL, NULL);
         }
         if(disk_offset == (RmOff)-1) {
             /* use inode number instead of disk offset */

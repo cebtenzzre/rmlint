@@ -45,8 +45,8 @@ typedef struct RmFmtHandlerShScript {
     RmOff line_count;
 } RmFmtHandlerShScript;
 
-static const char *SH_SCRIPT_TEMPLATE_HEAD = "<<SH_SOURCE>>";
-static const char *SH_SCRIPT_TEMPLATE_FOOT =
+static const char SH_SCRIPT_TEMPLATE_HEAD[] = "<<SH_SOURCE>>";
+static const char SH_SCRIPT_TEMPLATE_FOOT[] =
     "\n"
     "\n"
     "\n"

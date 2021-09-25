@@ -21,6 +21,7 @@
 #define HAVE_LINUX_FS_H    ({HAVE_LINUX_FS_H})
 #define HAVE_UNAME         ({HAVE_UNAME})
 #define HAVE_SYSMACROS_H   ({HAVE_SYSMACROS_H})
+#define HAVE_STDNORETURN_H ({HAVE_STDNORETURN_H})
 #define HAVE_MM_CRC32_U64  ({HAVE_MM_CRC32_U64})
 #define HAVE_BUILTIN_CPU_SUPPORTS ({HAVE_BUILTIN_CPU_SUPPORTS})
 
@@ -97,7 +98,7 @@ typedef guint64 RmOff;
     #endif
     #ifdef __GNUC__
         #define INLINE inline __attribute__((__always_inline__))
-    #elif defined(__CLANG__)
+    #elif defined(__clang__)
         #if __has_attribute(__always_inline__)
             #define INLINE inline __attribute__((__always_inline__))
         #endif
@@ -112,11 +113,25 @@ typedef guint64 RmOff;
 
 #ifdef __GNUC__
     #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-#elif defined(__CLANG__)
+#elif defined(__clang__)
     #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #else
     /* give up */
     #define WARN_UNUSED_RESULT
+#endif
+
+#if HAVE_STDNORETURN_H
+    #include <stdnoreturn.h>
+#endif
+
+#ifdef noreturn
+    #define NORETURN noreturn
+#elif defined(__GNUC__) || defined(__clang__)
+    #define NORETURN __attribute__((__noreturn__))
+#elif defined(_MSC_VER)
+    #define NORETURN __declspec(noreturn)
+#else
+    #define noreturn
 #endif
 
 #endif

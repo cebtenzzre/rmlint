@@ -828,7 +828,6 @@ static void rm_shred_group_finalise(RmShredGroup *self) {
         rm_util_thread_pool_push(self->session->shredder->result_pool, self);
         break;
     case RM_SHRED_GROUP_FINISHED:
-    default:
         g_assert_not_reached();
     }
 }
@@ -967,7 +966,6 @@ static RmFile *rm_shred_group_push_file(RmShredGroup *shred_group, RmFile *file,
             g_queue_push_head(shred_group->held_files, file);
             break;
         case RM_SHRED_GROUP_FINISHED:
-        default:
             g_assert_not_reached();
         }
     }

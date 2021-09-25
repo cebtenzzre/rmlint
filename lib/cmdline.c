@@ -28,6 +28,7 @@
 #include <string.h>
 #include <search.h>
 
+#include "config.h"
 #include "formats.h"
 #include "md-scheduler.h"
 #include "preprocess.h"
@@ -51,7 +52,7 @@ static const RmDigestType RM_PARANOIA_LEVELS[] = {RM_DIGEST_METRO,
 static const int RM_PARANOIA_NORMAL = 3;  /*  must be index of RM_DEFAULT_DIGEST */
 static const int RM_PARANOIA_MAX = 5;
 
-static void rm_cmd_show_version(void) {
+NORETURN static void rm_cmd_show_version(void) {
     fprintf(stderr, "version %s compiled: %s at [%s] \"%s\" (rev %s)\n", RM_VERSION,
             __DATE__, __TIME__, RM_VERSION_NAME, RM_VERSION_GIT_REVISION);
 
@@ -86,20 +87,20 @@ static void rm_cmd_show_version(void) {
     exit(0);
 }
 
-static void rm_cmd_show_manpage(void) {
-    static const char *commands[] = {"man %s docs/rmlint.1.gz 2> /dev/null",
-                                     "man %s rmlint", NULL};
+#if RM_MANPAGE_USE_PAGER
+    #define MAN_OPTS ""
+#else
+    #define MAN_OPTS "-P cat"
+#endif
+
+NORETURN static void rm_cmd_show_manpage(void) {
+    static const char *commands[] = {"man " MAN_OPTS " docs/rmlint.1.gz 2> /dev/null",
+                                     "man " MAN_OPTS " rmlint", NULL};
 
     bool found_manpage = false;
 
     for(int i = 0; commands[i] && !found_manpage; ++i) {
-        char cmd_buf[512] = {0};
-        if(snprintf(cmd_buf, sizeof(cmd_buf), commands[i],
-                    (RM_MANPAGE_USE_PAGER) ? "" : "-P cat") == -1) {
-            continue;
-        }
-
-        if(system(cmd_buf) == 0) {
+        if(system(commands[i]) == 0) {
             found_manpage = true;
         }
     }

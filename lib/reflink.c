@@ -158,6 +158,8 @@ RmLinkType rm_reflink_type_from_fd(int fd1, int fd2) {
 
     return RM_LINK_ERROR;
 #else
+    (void)fd1;
+    (void)fd2;
     return RM_LINK_NONE;
 #endif
 }
@@ -308,7 +310,7 @@ int rm_dedupe_main(int argc, const char **argv) {
                 rm_log_warning_line("dedupe: failed to preserve ownership for %s",
                                     source_path);
                 // try to preserve group ID
-                (void)lchown(cloneto_path, -1, source_stat.st_gid);
+                (void)!lchown(cloneto_path, -1, source_stat.st_gid);
             }
 
             if(lchmod(cloneto_path, source_stat.st_mode) != 0) {
@@ -498,11 +500,10 @@ int rm_is_reflink_main(int argc, const char **argv) {
     g_option_context_free(context);
     g_free(summary);
 
-    if(!HAVE_FIEMAP) {
-        rm_log_error_line(_("Cannot test for reflinks because rmlint was compiled without fiemap support"));
-        return EXIT_FAILURE;
-    }
-
+#if !HAVE_FIEMAP
+    rm_log_error_line(_("Cannot test for reflinks because rmlint was compiled without fiemap support"));
+    return EXIT_FAILURE;
+#else
     const char *a = argv[1];
     const char *b = argv[2];
     rm_log_debug_line("Testing if %s is clone of %s", a, b);
@@ -511,4 +512,5 @@ int rm_is_reflink_main(int argc, const char **argv) {
     rm_log_info("Link type for '%s' and '%s', result:\n", a, b);
     rm_log_warning("%s\n", desc[result]);
     return result;
+#endif
 }

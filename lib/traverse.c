@@ -260,7 +260,6 @@ bool rm_traverse_is_emptydir(const char *path, RmCfg *cfg, int current_depth) {
             rm_log_warning_line(_("error %d in fts_read for %s (skipping)"), errno,
                                 p->fts_path);
             break;
-            break;
         case FTS_SLNONE:  /* symbolic link without target */
         case FTS_W:       /* whiteout object */
         case FTS_NS:      /* rm_sys_stat(2) failed */

@@ -125,6 +125,17 @@ def check_sysmacro_h(context):
     return rc
 
 
+def check_stdnoreturn_h(context):
+    rc = 1
+    if rc and tests.CheckHeader(context, 'stdnoreturn.h'):
+        rc = 0
+
+    conf.env['HAVE_STDNORETURN_H'] = rc
+    context.did_show_result = True
+    context.Result(rc)
+    return rc
+
+
 def check_libelf(context):
     rc = 1
 
@@ -633,7 +644,8 @@ conf = Configure(env, custom_tests={
     'check_mm_crc32_u64': check_mm_crc32_u64,
     'check_cpu_extensions': check_cpu_extensions,
     'check_builtin_cpu_supports': check_builtin_cpu_supports,
-    'check_sysmacro_h': check_sysmacro_h
+    'check_sysmacro_h': check_sysmacro_h,
+    'check_stdnoreturn_h': check_stdnoreturn_h
 })
 
 #######################################################################
@@ -717,20 +729,33 @@ conf.check_mm_crc32_u64()
 if 'clang' in os.path.basename(conf.env['CC']):
     conf.env.Append(CCFLAGS=['-fcolor-diagnostics'])  # Colored warnings
     conf.env.Append(CCFLAGS=['-Qunused-arguments'])   # Hide wrong messages
-    conf.env.Append(CCFLAGS=['-Wno-bad-function-cast'])
+    conf.env.Append(CCFLAGS=[
+        '-Wmost',
+        '-Wunreachable-code-aggressive',
+        '-Wno-bad-function-cast',
+    ])
 else:
     gcc_version = conf.check_gcc_version()
+    if gcc_version:
+        conf.env.Append(CCFLAGS=[
+            '-Wduplicated-cond',
+            '-Wduplicated-branches',
+            '-Wlogical-op',
+        ])
     if gcc_version >= 8:
         conf.env.Append(CCFLAGS=['-Wno-cast-function-type'])
 
 # Optional flags:
 conf.env.Append(CCFLAGS=[
-    '-Wall', '-W', '-Wextra',
+    '-Wall', '-Wextra',
     '-Winit-self',
-    '-Wstrict-aliasing',
     '-Wmissing-include-dirs',
     '-Wuninitialized',
     '-Wstrict-prototypes',
+    '-Wnull-dereference',
+    '-Wformat-security',
+    '-Wformat-y2k',
+    '-Wmissing-noreturn',
     '-Wno-implicit-fallthrough',
 ])
 
@@ -756,6 +781,7 @@ conf.check_btrfs_h()
 conf.check_linux_fs_h()
 conf.check_uname()
 conf.check_sysmacro_h()
+conf.check_stdnoreturn_h()
 conf.check_cpu_extensions()
 
 if conf.env['HAVE_LIBELF']:
@@ -773,6 +799,9 @@ if conf.env['HAVE_SSE4_1']:
 if conf.env['HAVE_SSE2']:
 	conf.env.Append(CCFLAGS=['-msse2'])
 
+
+# NB: After checks so they don't fail
+conf.env.Append(CCFLAGS=['-Werror'])
 
 if ARGUMENTS.get('GDB') == '1':
     ARGUMENTS['DEBUG'] = '1'

@@ -25,6 +25,7 @@
 
 #include "shredder.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -1426,17 +1427,13 @@ static RmShredGroup *rm_shred_basename_rejects(RmShredGroup *group, RmShredTag *
     return rejects;
 }
 
-/* if cfg->keep_hardlinked_dupes then tag hardlinked dupes as originals */
-static void rm_shred_tag_hardlink_rejects(RmShredGroup *group, _UNUSED RmShredTag *tag) {
-    if(!tag->session->cfg->keep_hardlinked_dupes) {
-        return;
-    }
-
+/* tag linked dupes as originals */
+static void rm_shred_tag_link_rejects(RmShredGroup *group, size_t member_off) {
     if(group->status != RM_SHRED_GROUP_FINISHING) {
         return;
     }
 
-    /* do triangular iteration over group to check if non-originals are hardlinks of
+    /* do triangular iteration over group to check if non-originals are links of
      * originals */
     for(GList *i_orig = group->held_files->head; i_orig; i_orig = i_orig->next) {
         RmFile *orig = i_orig->data;
@@ -1444,13 +1441,14 @@ static void rm_shred_tag_hardlink_rejects(RmShredGroup *group, _UNUSED RmShredTa
             /* have gone past last original */
             break;
         }
-        if(!orig->hardlinks) {
+        void *orig_ptr = *(void **)((char *)orig + member_off);
+        if(!orig_ptr) {
             continue;
         }
         for(GList *i_dupe = i_orig->next, *next = NULL; i_dupe; i_dupe = next) {
             next = i_dupe->next;
             RmFile *dupe = i_dupe->data;
-            if(dupe->hardlinks == orig->hardlinks) {
+            if(*(void **)((char *)dupe + member_off) == orig_ptr) {
                 dupe->is_original = TRUE;
             }
         }
@@ -1489,7 +1487,12 @@ static void rm_shred_group_postprocess(RmShredGroup *group, RmShredTag *tag) {
      */
     rm_shred_group_find_original(tag->session, group->held_files, group->status);
 
-    rm_shred_tag_hardlink_rejects(group, tag);
+    if(tag->session->cfg->keep_hardlinked_dupes) {
+        rm_shred_tag_link_rejects(group, offsetof(RmFile, hardlinks));
+    }
+    if(tag->session->cfg->keep_reflinked_dupes) {
+        rm_shred_tag_link_rejects(group, offsetof(RmFile, reflink_count));
+    }
 
     /* Update statistics */
     if(group->status == RM_SHRED_GROUP_FINISHING) {

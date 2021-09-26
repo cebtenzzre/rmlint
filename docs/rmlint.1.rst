@@ -332,6 +332,15 @@ Traversal Options
     deleted and also not even shown in the output. The "highest ranked" of the
     set is the one that is considered.
 
+:``--keep-reflinked``:
+
+    If ``--keep-reflinked`` is given, `rmlint` will not delete any files that
+    are reflinked to an original in their respective group. Such files will be
+    displayed like originals, i.e. for the default output with a "ls" in front.
+    The reasoning here is to maximize the number of kept files, while
+    maximizing the number of freed space: Removing reflinks to originals will
+    not allocate any free space.
+
 :``-f --followlinks`` / ``-F --no-followlinks`` / ``-@ --see-symlinks`` (**default**):
 
     ``-f`` will always follow symbolic links. If file system loops occurs

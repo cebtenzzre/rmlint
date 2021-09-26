@@ -147,7 +147,9 @@ bool rm_traverse_file(RmSession *session, RmStat *statp, const char *path, bool 
 
         if(!S_ISREG(statp->st_mode)) {
             file->phys_offset = (RmOff)-1;
-        } else if(session->mounts != NULL) {
+        } else if(session->mounts != NULL
+                  && (cfg->keep_reflinked_dupes
+                      || strchr(cfg->sort_criteria, 'c') != NULL || strchr(cfg->sort_criteria, 'C') != NULL)) {
             struct libmnt_fs *fs = mnt_table_find_mountpoint(session->mounts->mount_table, path, MNT_ITER_BACKWARD);
             if(fs) {
                 file->mnt_fstype = mnt_fs_get_fstype(fs);

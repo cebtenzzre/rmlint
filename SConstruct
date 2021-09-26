@@ -694,7 +694,7 @@ conf.env['HAVE_BLKID'] = 0
 conf.check_pkg('blkid', 'HAVE_BLKID', required=False)
 
 conf.env['HAVE_LIBMOUNT'] = 0
-conf.check_pkg('mount >= 2.23', 'HAVE_LIBMOUNT', required=True)
+conf.check_pkg('mount >= 2.25', 'HAVE_LIBMOUNT', required=True)
 
 conf.env['HAVE_JSON_GLIB'] = 0
 conf.check_pkg('json-glib-1.0', 'HAVE_JSON_GLIB', required=True)

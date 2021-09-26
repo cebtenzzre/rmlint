@@ -1316,31 +1316,45 @@ static gboolean rm_util_is_path_double(const char *path1, const char *path2) {
             rm_util_parent_node(path1) == rm_util_parent_node(path2));
 }
 
+static struct libmnt_fs *rm_util_get_fsinfo(const char *path, struct libmnt_table *table, struct libmnt_cache *cache) {
+    struct libmnt_fs *fs = NULL;
+    const char *target = mnt_resolve_target(path, cache);
+    if(target != NULL) {
+        fs = mnt_table_find_mountpoint(table, target, MNT_ITER_BACKWARD);
+    }
+    return fs;
+}
+
 /* test if two file paths are on the same device (even if on different
  * mountpoints)
  */
 static gboolean rm_util_same_device(const char *path1, const char *path2) {
-    const char *best1 = NULL;
-    const char *best2 = NULL;
-    int len1 = 0;
-    int len2 = 0;
-
-    GList *mounts = g_unix_mounts_get(NULL);
-    for(GList *iter = mounts; iter; iter = iter->next) {
-        GUnixMountEntry *mount = iter->data;
-        const char *mountpath = g_unix_mount_get_mount_path(mount);
-        int len = strlen(mountpath);
-        if(len > len1 && strncmp(mountpath, path1, len) == 0) {
-            best1 = g_unix_mount_get_device_path(mount);
-            len1 = len;
-        }
-        if(len > len2 && strncmp(mountpath, path2, len) == 0) {
-            best2 = g_unix_mount_get_device_path(mount);
-            len2 = len;
-        }
+    struct libmnt_table *mount_table = mnt_new_table();
+    if(mount_table == NULL || mnt_table_parse_mtab(mount_table, NULL) != 0) {
+        return true;
     }
-    gboolean result = (best1 && best2 && strcmp(best1, best2) == 0);
-    g_list_free_full(mounts, (GDestroyNotify)g_unix_mount_free);
+    struct libmnt_cache *mount_cache = mnt_new_cache();
+    if(mount_cache == NULL) {
+        mnt_free_table(mount_table);
+        return true;
+    }
+    mnt_table_set_cache(mount_table, mount_cache);
+    mnt_cache_set_targets(mount_cache, mount_table);
+
+    struct libmnt_fs *fs1 = rm_util_get_fsinfo(path1, mount_table, mount_cache);
+    if(fs1 == NULL) {
+        return false;
+    }
+    struct libmnt_fs *fs2 = rm_util_get_fsinfo(path2, mount_table, mount_cache);
+    if(fs2 == NULL) {
+        return false;
+    }
+
+    const char *source1 = mnt_fs_get_source(fs1);
+    const char *source2 = mnt_fs_get_source(fs2);
+    gboolean result = g_strcmp0(source1, source2) == 0;
+    mnt_unref_table(mount_table);
+    mnt_unref_cache(mount_cache);
     return result;
 }
 

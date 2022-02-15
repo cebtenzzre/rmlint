@@ -272,6 +272,11 @@ skip_reflink() {
     printf "${COL_BLUE}Leaving as-is (already reflinked to original): ${COL_RESET}%%s\n" "$1"
 }
 
+skip_inline() {
+    print_progress_prefix
+    printf "${COL_BLUE}Leaving as-is (has inline extents): ${COL_RESET}%%s\n" "$1"
+}
+
 user_command() {
     print_progress_prefix
 

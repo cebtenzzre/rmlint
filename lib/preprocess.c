@@ -315,7 +315,8 @@ void rm_preprocess(RmSession *session) {
     RmFileTables *tables = session->tables;
     GQueue *all_files = tables->all_files;
 
-    session->total_filtered_files = session->total_files;
+    /* traversed folders are in all_files and will be removed in a later step */
+    session->total_filtered_files = session->total_files + session->traversed_folders;
 
     /* remove path doubles and samefiles */
     guint removed = rm_pp_remove_path_doubles(session, all_files);

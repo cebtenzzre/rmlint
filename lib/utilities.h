@@ -50,6 +50,7 @@ typedef enum RmLinkType {
     RM_LINK_SYMLINK         = 9,
     RM_LINK_XDEV            = 10,
     RM_LINK_NONE            = 11,
+    RM_LINK_BOTH_EMPTY      = 12,
 } RmLinkType;
 
 #if HAVE_STAT64 && !RM_IS_APPLE

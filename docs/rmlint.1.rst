@@ -848,6 +848,7 @@ OTHER STAND-ALONE COMMANDS
     * 9: Encountered a symlink
     * 10: Files are on different devices
     * 11: Not linked
+    * 12: Both files are empty
 
 
 EXAMPLES

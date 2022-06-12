@@ -1418,6 +1418,10 @@ RmLinkType rm_util_link_type(const char *path1, const char *path2, bool use_fiem
         RM_RETURN(RM_LINK_WRONG_SIZE);
     }
 
+    if (stat1.st_size == 0) {
+        RM_RETURN(RM_LINK_BOTH_EMPTY);
+    }
+
     if(stat1.st_dev == stat2.st_dev && stat1.st_ino == stat2.st_ino) {
         /* hardlinks or maybe even same file */
         if(strcmp(path1, path2) == 0) {
@@ -1458,7 +1462,8 @@ const char **rm_link_type_to_desc() {
                                                  N_("Hardlink"),
                                                  N_("Encountered a symlink"),
                                                  N_("Files are on different devices"),
-                                                 N_("Not linked")};
+                                                 N_("Not linked"),
+                                                 N_("Both files are empty")};
     return RM_LINK_TYPE_TO_DESC;
 }
 

@@ -247,14 +247,15 @@ guint64 rm_util_size_string_to_bytes(const char *size_spec, GError **error) {
     RmOff result = base_size;
     if(need_multiply) {
         // Only multiply if we really have to.
-        result = (result + fraction) * size_factor;
+        double fres = (result + fraction) * size_factor;
 
         // Check if an overflow happened during multiplication.
-        if(result < base_size) {
+        if(fres > nextafter(ULONG_MAX, 0)) {
             g_set_error(error, RM_ERROR_QUARK, 0,
                         _("Size factor would overflow size (max. 2**64 allowed)"));
             return 0;
         }
+        result = fres;
     }
 
     return result;

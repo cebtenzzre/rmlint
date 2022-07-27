@@ -78,6 +78,7 @@ static /* Allow the variable to be controlled manually for testing */
 #endif
     enum cpu_feature g_cpu_features = UNDEFINED;
 
+__attribute__((__unused__))
 #if !defined(BLAKE3_TESTING)
 static
 #endif

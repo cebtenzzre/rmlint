@@ -33,6 +33,10 @@
 #include "preprocess.h"
 #include "xattr.h"
 
+#if HAVE_LIBMOUNT
+# include <libmount.h>
+#endif
+
 //////////////////////
 // TRAVERSE SESSION //
 //////////////////////

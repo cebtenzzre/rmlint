@@ -31,11 +31,12 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
-#include <libmount.h>
 
 /* Pat(h)tricia Trie implementation */
 #include "pathtricia.h"
 #include "logger.h"
+
+struct libmnt_table;
 
 /* return values for rm_util_link_type */
 typedef enum RmLinkType {

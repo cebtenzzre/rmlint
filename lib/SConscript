@@ -30,6 +30,7 @@ def build_config_template(target, source, env):
             HAVE_POSIX_FADVISE=env['HAVE_POSIX_FADVISE'],
             HAVE_BIG_OFF_T=env['HAVE_BIG_OFF_T'],
             HAVE_BLKID=env['HAVE_BLKID'],
+            HAVE_LIBMOUNT=env['HAVE_LIBMOUNT'],
             HAVE_SYSBLOCK=env['HAVE_SYSBLOCK'],
             HAVE_LINUX_LIMITS=env['HAVE_LINUX_LIMITS'],
             HAVE_LINUX_FS_H=env['HAVE_LINUX_FS_H'],

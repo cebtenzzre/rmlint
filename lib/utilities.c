@@ -51,6 +51,10 @@
 # include <gio/gunixmounts.h>
 #endif
 
+#if HAVE_LIBMOUNT
+# include <libmount.h>
+#endif
+
 #if HAVE_FIEMAP
 # include <linux/fiemap.h>
 # include <linux/fs.h>
@@ -70,7 +74,7 @@
 #include "reflink.h"
 
 
-#define RM_MOUNTTABLE_IS_USABLE (HAVE_BLKID && HAVE_GIO_UNIX)
+#define RM_MOUNTTABLE_IS_USABLE (HAVE_BLKID && HAVE_LIBMOUNT)
 
 ////////////////////////////////////
 //       SYSCALL WRAPPERS         //

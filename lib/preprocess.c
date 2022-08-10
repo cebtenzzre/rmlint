@@ -315,8 +315,7 @@ void rm_preprocess(RmSession *session) {
     RmFileTables *tables = session->tables;
     GQueue *all_files = tables->all_files;
 
-    /* traversed folders are in all_files and will be removed in a later step */
-    session->total_filtered_files = session->total_files + session->traversed_folders;
+    session->total_filtered_files = session->total_files;
 
     /* remove path doubles and samefiles */
     guint removed = rm_pp_remove_path_doubles(session, all_files);
@@ -325,6 +324,7 @@ void rm_preprocess(RmSession *session) {
      * appropriate list in session->tables->other_lint */
     removed += rm_util_queue_foreach_remove(
             all_files, (RmRFunc)rm_pp_sift_other_lint, session);
+    removed -= session->traversed_folders; /* these aren't counted in total_files */
 
     /* bundle (or free) hardlinks */
     removed += rm_pp_bundle_hardlinks(session, all_files);

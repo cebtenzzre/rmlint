@@ -51,13 +51,13 @@
 # include <gio/gunixmounts.h>
 #endif
 
-#if HAVE_LIBMOUNT
-# include <libmount.h>
-#endif
-
 #if HAVE_FIEMAP
 # include <linux/fiemap.h>
 # include <linux/fs.h>
+#endif
+
+#if HAVE_LIBMOUNT
+# include <libmount.h>
 #endif
 
 #if HAVE_LIBELF

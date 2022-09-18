@@ -136,7 +136,7 @@ static gint rm_file_cmp_hardlink(const RmFile *a, const RmFile *b) {
     return SIGN_DIFF(rm_file_inode(a), rm_file_inode(b));
 }
 
-static bool rm_file_is_reflink(const RmFile *a, const RmFile *b) {
+static bool rm_file_maybe_reflink(const RmFile *a, const RmFile *b) {
     if(a->mnt_fstype == NULL || b->mnt_fstype == NULL \
        || strcmp(a->mnt_fstype, b->mnt_fstype) != 0) {
         return false;
@@ -241,16 +241,20 @@ static gint rm_pp_bundle_hardlinks(RmSession *session, GQueue *files) {
         }
     }
 
-    i = files->head;
-    other_i = i ? i->next : NULL;
-    for (; i && other_i; other_i = other_i->next) {
-        RmFile *this = i->data;
-        RmFile *other = other_i->data;
-        if(rm_file_is_reflink(this, other)) {
-            // it's a reflink of prev
-            rm_file_reflink_add(this, other);
-        } else {
-            i = other_i;
+    if(session->cfg->keep_reflinked_dupes) {
+        /* Optimization: Assume files that share their first extent are
+         * reflinked. Only safe if we are marking them as originals anyway. */
+        i = files->head;
+        other_i = i ? i->next : NULL;
+        for (; i && other_i; other_i = other_i->next) {
+            RmFile *this = i->data;
+            RmFile *other = other_i->data;
+            if(rm_file_maybe_reflink(this, other)) {
+                // it's likely a reflink of prev
+                rm_file_reflink_add(this, other);
+            } else {
+                i = other_i;
+            }
         }
     }
     return removed;

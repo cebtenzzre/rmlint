@@ -88,6 +88,7 @@ class Application(Gtk.Application):
 
     def do_activate(self, **kw):
         Gtk.Application.do_activate(self, **kw)
+        assert self.win is not None
         self.win.present()
 
     def do_startup(self, **kw):
@@ -116,19 +117,19 @@ class Application(Gtk.Application):
         # Init the config system
         self.settings = Gio.Settings.new('org.gnome.Shredder')
 
-        self.win = MainWindow(self)
+        self.win = win = MainWindow(self)
 
         self.add_action(_create_action(
-            'settings', lambda *_: self.win.views.switch('settings')
+            'settings', lambda *_: win.views.switch('settings')
         ))
         self.add_action(_create_action(
-            'about', lambda *_: AboutDialog(self.win).show_all()
+            'about', lambda *_: AboutDialog(win).show_all()
         ))
         self.add_action(_create_action(
-            'search', lambda *_: self.win.views.set_search_mode(True)
+            'search', lambda *_: win.views.set_search_mode(True)
         ))
         self.add_action(_create_action(
-            'activate', lambda *_: self.win.views.do_default_action()
+            'activate', lambda *_: win.views.do_default_action()
         ))
         self.add_action(_create_action(
             'quit', lambda *_: self.quit()
@@ -140,22 +141,22 @@ class Application(Gtk.Application):
 
         # Set the fallback window title.
         # This is only used if no .desktop file is provided.
-        self.win.set_wmclass(APP_TITLE, APP_TITLE)
+        win.set_wmclass(APP_TITLE, APP_TITLE)
 
         # Load the application icon
-        self.win.set_default_icon(_load_app_icon())
+        win.set_default_icon(_load_app_icon())
 
         LOGGER.debug('Instancing views.')
-        self.win.views.add_view(SettingsView(self), 'settings')
-        self.win.views.add_view(LocationView(self), 'locations')
-        self.win.views.add_view(RunnerView(self), 'runner')
-        self.win.views.add_view(EditorView(self), 'editor')
+        win.views.add_view(SettingsView(self), 'settings')
+        win.views.add_view(LocationView(self), 'locations')
+        win.views.add_view(RunnerView(self), 'runner')
+        win.views.add_view(EditorView(self), 'editor')
         LOGGER.debug('Done instancing views.')
 
         initial_view = 'locations'
 
         if self.cmd_opts.tagged or self.cmd_opts.untagged:
-            self.win.views['runner'].trigger_run(
+            win.views['runner'].trigger_run(
                 self.cmd_opts.untagged or [],
                 self.cmd_opts.tagged or []
             )
@@ -165,14 +166,14 @@ class Application(Gtk.Application):
             initial_view = 'settings'
 
         for path in self.cmd_opts.locations or []:
-            self.win.views['locations'].add_recent_item(path)
+            win.views['locations'].add_recent_item(path)
 
         if self.cmd_opts.script:
-            self.win.views['editor'].override_script(
+            win.views['editor'].override_script(
                 Script(self.cmd_opts.script)
             )
             initial_view = 'editor'
 
         # Set the default view visible at startup
-        self.win.views.switch(initial_view)
-        self.win.show_all()
+        win.views.switch(initial_view)
+        win.show_all()

@@ -67,7 +67,7 @@ class Column:
     TYPES = [float, int, int, int, int, str, str]
 
     @staticmethod
-    def make_row(md_map):
+    def make_row(md_map: dict[str, Any]) -> list[float | NodeState | str]:
         """Convert an rmlint json dict to a tree row"""
         is_original = md_map.get('is_original', False)
         if md_map.get('type', '').startswith('duplicate_'):
@@ -113,7 +113,7 @@ class PathNode:
         self.row = Column.make_row(metadata or {})
 
         # Private:
-        self.indices: deque[PathNode] = deque()
+        self.indices: deque[PathNode] | list[PathNode] = deque()
         self.idx = 0
         self.is_leaf = False
         self.depth = (parent.depth + 1) if parent else 0
@@ -192,6 +192,7 @@ def _create_root_path_index(index, path, node):
         last_map = curr_map
         curr_map = curr_map.setdefault(name, {})
 
+    assert last_map is not None
     last_map[name] = node
 
 

@@ -126,7 +126,8 @@ try:
 # Fallback to the normal Gtk.TextView if no GtkSource.View could be imported
 # This is the bare minimum we support. It's neither pretty nor very useful.
 except ImportError:
-    GtkSource = None  # type: ignore[assignment]
+    if not TYPE_CHECKING:
+        GtkSource = None
 
 if not TYPE_CHECKING and GtkSource is None:
     def _create_source_view():

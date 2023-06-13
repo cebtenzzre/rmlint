@@ -221,8 +221,7 @@ def _create_rmlint_process(
         else:
             LOGGER.exception('Process failed')
 
-        # No point in going any further
-        return None
+        raise
     else:
         return process
 
@@ -510,6 +509,7 @@ class Script(GObject.Object):
     def _queue_read(self):
         """Schedule a read from rmlint's stdout stream."""
         if self._stream is None:
+            assert self._process is not None
             self._stream = Gio.DataInputStream.new(
                 self._process.get_stdout_pipe()
             )

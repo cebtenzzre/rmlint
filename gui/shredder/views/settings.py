@@ -24,8 +24,7 @@ from operator import itemgetter
 from functools import partial
 
 # External:
-from gi.repository import Gtk
-from gi.repository import GLib
+from gi.repository import Gio, GLib, Gtk
 
 # Internal:
 from shredder.util import View, SuggestedButton, DestructiveButton
@@ -323,8 +322,8 @@ class SettingsView(View):
                 else:
                     _set_vis(row, False, 0.5)
 
-            section_frame = metadata['frame']
-            section_label = metadata['label']
+            section_frame: Gtk.Widget = metadata['frame']
+            section_label: Gtk.Widget = metadata['label']
             _set_vis(section_frame, section_visible > 0, 0.2)
             _set_vis(section_label, section_visible > 0, 0.2)
 

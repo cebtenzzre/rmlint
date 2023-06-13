@@ -51,21 +51,19 @@ class Query:
 
     It should not be directly instantiated.
     """
-    def __init__(self):
+    def __init__(self, name, sizes, mtimes, amounts):
         """You should not use this."""
-        self.name = self.sizes = self.mtimes = self.amounts = None
+        self.name = name
+        self.sizes = sizes
+        self.mtimes = mtimes
+        self.amounts = amounts
 
     @staticmethod
     def parse(query_input):
         """Parse a query and return a fresh Query object."""
         result = parse(query_input)
 
-        qry = Query()
-        qry.name = result['name']
-        qry.sizes = result['size']
-        qry.mtimes = result['mtime']
-        qry.amounts = result['count']
-        return qry
+        return Query(result['name'], result['size'], result['mtime'], result['count'])
 
     def issubset(self, other_query):
         """Check if this query will yield a subset of other_query"""

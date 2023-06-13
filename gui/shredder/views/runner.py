@@ -410,6 +410,7 @@ class RunnerView(View):
                 path_to_is_original[ch.build_path()] = \
                     NodeState.should_keep(ch[Column.TAG])
 
+        assert self.runner is not None
         self.runner.replay(path_to_is_original)
         self.app_window.views.go_right.set_sensitive(True)
         self.app_window.views.switch('editor')

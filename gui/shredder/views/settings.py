@@ -19,6 +19,7 @@ $ gsettings --schemadir ~/.glib-schemas set org.gnome.Shredder traverse-depth 2
 import re
 import logging
 
+from collections.abc import Callable
 from operator import itemgetter
 from functools import partial
 
@@ -114,7 +115,7 @@ def choice_widget(settings, key_name, summary, _):
     return button
 
 
-VARIANT_TO_WIDGET = {
+VARIANT_TO_WIDGET: dict[str, Callable[[Gio.Settings, str, str, str], Gtk.Widget]] = {
     'b': boolean_widget,
     'i': partial(numeric_widget),
     'd': partial(numeric_widget, step=0.1),
@@ -197,8 +198,8 @@ class SettingsView(View):
         summary: A short summary to show.
         desc: A longer description.
         """
-        desc_label = Gtk.Label(desc or '')
-        summ_label = Gtk.Label(summary or '')
+        desc_label = Gtk.Label(label=desc or '')
+        summ_label = Gtk.Label(label=summary or '')
 
         desc_label.get_style_context().add_class(
             Gtk.STYLE_CLASS_DIM_LABEL

@@ -21,6 +21,7 @@ import time
 import logging
 
 from collections import OrderedDict, defaultdict, deque
+from typing import Any, cast
 
 # External:
 from gi.repository import Gtk
@@ -112,7 +113,7 @@ class PathNode:
         self.row = Column.make_row(metadata or {})
 
         # Private:
-        self.indices = deque()
+        self.indices: deque[PathNode] = deque()
         self.idx = 0
         self.is_leaf = False
         self.depth = (parent.depth + 1) if parent else 0
@@ -225,7 +226,7 @@ class PathTrie(GObject.Object):
         self.nodes = {id(self.root): self.root}
         self.max_depth = 0
 
-        self.root_paths = {}
+        self.root_paths: dict[str, PathNode | dict[str, Any]] = {}
         for root_path in root_paths or []:
             # Append the sub root node manually:
             sub_root_node = self.root.append(root_path.strip('/'))
@@ -858,6 +859,9 @@ class PathTreeView(Gtk.TreeView):
         # Shut up, pylint.
         self._menu = None
 
+    def get_model(self) -> PathTreeModel:
+        return cast(PathTreeModel, super().get_model())
+
     def set_model(self, model):
         """Overwrite Gtk.TreeView.set_model, but expand sub root paths"""
         Gtk.TreeView.set_model(self, model)
@@ -866,8 +870,9 @@ class PathTreeView(Gtk.TreeView):
     def get_selected_nodes(self):
         """Extra convenience method for getting the currently selected nodes"""
         model, rows = self.get_selection().get_selected_rows()
+        trie = cast(PathTreeModel, model).trie
         for tp_path in rows:
-            node = model.trie.resolve(tp_path.get_indices())
+            node = trie.resolve(tp_path.get_indices())
             yield node
 
     def get_selected_node(self):

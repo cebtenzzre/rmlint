@@ -14,6 +14,7 @@ This is a valid example for example:
 import re
 import logging
 from collections import defaultdict
+from typing import Any
 
 try:
     from parsedatetime import Calendar
@@ -195,7 +196,7 @@ def parse(query):
     Extracts arbitrary text and attr-value pairs.
     """
     attrs = ATTR_PATTERN.finditer(query)
-    results = defaultdict(list)
+    results: defaultdict[str, Any] = defaultdict(list)
     indices = [0]
 
     for match in attrs:

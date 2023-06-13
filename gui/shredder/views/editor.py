@@ -15,6 +15,7 @@ of killed files in terms of size.
 import os
 import time
 import logging
+from typing import TYPE_CHECKING
 
 # External:
 from gi.repository import Gtk
@@ -125,7 +126,9 @@ try:
 # Fallback to the normal Gtk.TextView if no GtkSource.View could be imported
 # This is the bare minimum we support. It's neither pretty nor very useful.
 except ImportError:
+    GtkSource = None  # type: ignore[assignment]
 
+if not TYPE_CHECKING and GtkSource is None:
     def _create_source_view():
         """Create a suitable text view + buffer for showing a sh script."""
         LOGGER.info('No GtkSourceView found.')
@@ -340,7 +343,7 @@ class ScriptSaverDialog(Gtk.FileChooserWidget):
 
         self.connect('selection-changed', self.on_selection_changed)
 
-        file_type_label = Gtk.Label('<b>Filetype</b>')
+        file_type_label = Gtk.Label(label='<b>Filetype</b>')
         file_type_label.set_use_markup(True)
         file_type_label.props.margin_end = 5
         file_type_label.get_style_context().add_class(

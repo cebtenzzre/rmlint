@@ -132,7 +132,7 @@ class RunnerView(View):
         # Public: The runner.
         self.runner = None
 
-        self.last_paths = []
+        self.last_paths: tuple[()] | tuple[list[str], list[str]] = ()
 
         # Disable scrolling for the main view:
         self.scw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
@@ -236,7 +236,7 @@ class RunnerView(View):
         self.is_running = False
         self._script_generated = False
         self.runner = None
-        self.last_paths = []
+        self.last_paths = ()
 
         self.chart_stack.set_visible_child_name(ChartStack.LOADING)
         self.actionbar.set_sensitive(False)
@@ -374,8 +374,8 @@ class RunnerView(View):
             cksum = node[Column.CKSUM]
             group = self.model.trie.group(cksum)
 
-            paths = []
-            if len(self.last_paths) > 1:
+            paths: list[str] = []
+            if self.last_paths:
                 paths = self.last_paths[0] + self.last_paths[1]
 
             group_model = PathTreeModel(paths)

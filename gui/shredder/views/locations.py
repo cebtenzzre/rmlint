@@ -61,7 +61,7 @@ class DeferSizeLabel(Gtk.Bin):
             text = ''
 
         self.remove(self.get_child())
-        self.add(Gtk.Label(text))
+        self.add(Gtk.Label(label=text))
         self.show_all()
 
 
@@ -93,14 +93,14 @@ class LocationEntry(Gtk.ListBoxRow):
         self.path, self.name = path, name
 
         name_label = Gtk.Label(
-            '<b>{}</b>'.format(GLib.markup_escape_text(name))
+            label='<b>{}</b>'.format(GLib.markup_escape_text(name)),
         )
         name_label.set_use_markup(True)
         name_label.set_hexpand(True)
         name_label.set_halign(Gtk.Align.START)
 
         path_label = Gtk.Label(
-            '<small>{}</small>'.format(GLib.markup_escape_text(path))
+            label='<small>{}</small>'.format(GLib.markup_escape_text(path)),
         )
         path_label.set_use_markup(True)
         path_label.set_hexpand(True)
@@ -252,7 +252,7 @@ class LocationView(View):
         self.box = Gtk.ListBox()
         self.box.set_selection_mode(Gtk.SelectionMode.NONE)
         self.box.set_hexpand(True)
-        self.box.set_placeholder(Gtk.Label('No locations mounted.'))
+        self.box.set_placeholder(Gtk.Label(label='No locations mounted.'))
         self.box.set_valign(Gtk.Align.FILL)
         self.box.set_vexpand(True)
 

@@ -16,7 +16,6 @@ import re
 import json
 import errno
 import shutil
-import codecs
 import logging
 import tempfile
 
@@ -481,8 +480,7 @@ class Script(GObject.Object):
         # Do not reuse the file descriptor, since it is only valid once.
         # Be a bit careful, since the script might contain weird encoding,
         # since there is no path encoding guaranteed in Unix usually:
-        opts = dict(encoding='utf-8', errors='ignore')
-        with codecs.open(self.script_file, 'r', **opts) as handle:
+        with open(self.script_file, encoding='utf-8', errors='ignore') as handle:
             return _strip_ascii_colors(handle.read())
 
     def read_bytes(self):

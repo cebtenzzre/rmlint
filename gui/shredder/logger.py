@@ -10,17 +10,18 @@ It has colors and symbols! Enough reasoning.
 # Stdlib:
 import logging
 import logging.handlers
+from typing import Dict
 
 
-COLORED_FORMAT = "%(asctime)s%(reset)s %(log_color)s[logsymbol] \
+COLORED_FORMAT: str = "%(asctime)s%(reset)s %(log_color)s[logsymbol] \
 %(levelname)-8s%(reset)s \
 %(bold_black)s%(name)s:%(lineno)d:%(reset)s %(message)s"
 
-SIMPLE_FORMAT = "%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)3d] \
+SIMPLE_FORMAT: str = "%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)3d] \
 %(name)s: %(message)s"
 
-DATE_FORMAT = "%H:%M:%S"
-UNICODE_ICONS = {
+DATE_FORMAT: str = "%H:%M:%S"
+UNICODE_ICONS: Dict[int, str] = {
     logging.DEBUG: '⚙',
     logging.INFO: '⚐',
     logging.WARNING: '⚠',
@@ -29,7 +30,7 @@ UNICODE_ICONS = {
 }
 
 
-def create_logger(name=None, path=None, verbosity=logging.DEBUG):
+def create_logger(name=None, path=None, verbosity=logging.DEBUG) -> logging.Logger:
     '''Create a new Logger configured with moosecat's defaults.
 
     :name: A user-define name that describes the logger
@@ -95,7 +96,7 @@ def create_logger(name=None, path=None, verbosity=logging.DEBUG):
 
 
 if __name__ == '__main__':
-    LOGGER = create_logger('Marc')
+    LOGGER: logging.Logger = create_logger('Marc')
     LOGGER.setLevel(logging.DEBUG)
 
     LOGGER.critical('A clitical error.')

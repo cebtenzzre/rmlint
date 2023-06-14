@@ -24,10 +24,11 @@ from gi.repository import GLib
 
 from gi.repository import Pango
 from gi.repository import PangoCairo
+from typing import Any, List, Tuple
 
 
-ANGLE_LIMIT_TOOLTIP = math.pi / 32
-ANGLE_LIMIT_VISIBLE = math.pi / 256
+ANGLE_LIMIT_TOOLTIP: float = math.pi / 32
+ANGLE_LIMIT_VISIBLE: float = math.pi / 256
 
 
 ###########################################################
@@ -37,7 +38,7 @@ ANGLE_LIMIT_VISIBLE = math.pi / 256
 ###########################################################
 
 
-def _draw_center_text(ctx, x, y, text, font_size=10, do_draw=True):
+def _draw_center_text(ctx, x, y, text, font_size=10, do_draw=True) -> Tuple[Any, Any]:
     '''Draw a text at the center of ctx/alloc.
 
     ctx: a cairo Context to draw to
@@ -61,7 +62,7 @@ def _draw_center_text(ctx, x, y, text, font_size=10, do_draw=True):
     return fw, fh
 
 
-def _draw_rounded(ctx, area, radius):
+def _draw_rounded(ctx, area, radius) -> None:
     """draws rectangles with rounded (circular arc) corners"""
     a, b, c, d = area
     mpi2 = math.pi / 2
@@ -72,7 +73,7 @@ def _draw_rounded(ctx, area, radius):
     ctx.close_path()
 
 
-TANGO_TABLE = [
+TANGO_TABLE: List[Tuple[float, float, float]] = [
     (0.000, 0.829, 0.94),
     (0.096, 0.747, 0.99),
     (0.104, 0.527, 0.91),
@@ -82,7 +83,7 @@ TANGO_TABLE = [
 ]
 
 
-def _hsv_by_degree(degree):
+def _hsv_by_degree(degree) -> Tuple[float, float, float]:
     """Convert degree (in rad) to a predefined color.
     Currently only one colorscheme is supported (Tango)
     """
@@ -94,7 +95,7 @@ def _hsv_by_degree(degree):
 
 def _draw_segment(
         ctx, alloc, layer, max_layers,
-        deg_a, deg_b, is_selected, bg_col):
+        deg_a, deg_b, is_selected, bg_col) -> None:
     """Draw a radial segment on the context ctx with the following params:
 
     layer: The segment layer to draw (or "how far from the midpoint we are")
@@ -164,7 +165,7 @@ def _draw_segment(
     ctx.set_line_width(1)
 
 
-def _draw_tooltip(ctx, alloc, x, y, dist, angle, text):
+def _draw_tooltip(ctx, alloc, x, y, dist, angle, text) -> None:
     """Draw a tooltip rooting at (x,y) and hitting the bounding box with `text`
     """
     # Draw the anchor circle on the segment
@@ -227,7 +228,7 @@ def _draw_tooltip(ctx, alloc, x, y, dist, angle, text):
 
 class Chart(Gtk.DrawingArea):
     """Base class for charts providing the basic interfaces and signals."""
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.DrawingArea.__init__(self)
         self.connect('draw', self.on_draw)
 
@@ -243,22 +244,22 @@ class Chart(Gtk.DrawingArea):
     # TO BE OVERWRITTEN BY CHILD #
     ##############################
 
-    def on_draw(self, area, ctx):
+    def on_draw(self, area, ctx) -> None:
         """Put your subclass draw code here."""
         pass
 
-    def on_motion(self, area, event):
+    def on_motion(self, area, event) -> None:
         """Executed on ever pointer motion."""
         pass
 
-    def on_button_press_event(self, area, event):
+    def on_button_press_event(self, area, event) -> None:
         """Executed on every pointer or keyboard press."""
         pass
 
 
 class Segment:
     """Helper and data class for a single segment in a RingChart."""
-    def __init__(self, node, layer, degree, size, tooltip=None):
+    def __init__(self, node, layer, degree, size, tooltip=None) -> None:
         self.node = node
         self.children = []
         self.layer, self.degree, self.size = layer, degree, size
@@ -273,7 +274,7 @@ class Segment:
             else:
                 self.tooltip = tooltip
 
-    def draw(self, ctx, alloc, max_layers, bg_col):
+    def draw(self, ctx, alloc, max_layers, bg_col) -> None:
         """Trigger the actual drawing of the segment."""
         _draw_segment(
             ctx, alloc,
@@ -283,7 +284,7 @@ class Segment:
             bg_col
         )
 
-    def hit(self, layer, deg):
+    def hit(self, layer, deg) -> Any:
         """Check if the segment was hit by a click,
         depending on a certain layer and angle.
         """
@@ -294,7 +295,7 @@ class Segment:
 
         return self.is_selected
 
-    def middle_point(self, alloc, max_layers):
+    def middle_point(self, alloc, max_layers) -> Tuple[Any, Any]:
         """Calculate the middle point of the segment.
 
         The middle point is here defined as the mid between
@@ -317,7 +318,7 @@ class Segment:
         deg = self.degree + self.size / 2
         return mid_x + rad * math.cos(deg), mid_y + rad * math.sin(deg)
 
-    def middle_angle(self):
+    def middle_angle(self) -> Any:
         """Calculate an angle that goes through the mid of the segment."""
         return self.degree + self.size / 2
 
@@ -327,7 +328,7 @@ class RingChart(Chart):
     Each depth becomes one ring. Each segment has 0 to one parent.
     Size of the node determines the size of the segment.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         Chart.__init__(self)
 
         # Id of the tooltip timeout
@@ -338,7 +339,7 @@ class RingChart(Chart):
         self._selected_segment = None
         self._last_root = None
 
-    def recursive_angle(self, node, angle, offset, layer_offset=0):
+    def recursive_angle(self, node, angle, offset, layer_offset=0) -> None:
         """Calculates the angles of the segments and stores them in a
         list that is ordered by Z-Depth, so the plot appears to be layered
         with the root circle on top. This resembles a depth first traversal.
@@ -370,7 +371,7 @@ class RingChart(Chart):
 
             child_offset += child_angle
 
-    def find_root(self, node):
+    def find_root(self, node) -> Any:
         """Iterate to the first child that has more than one children"""
         if len(node.children) > 1:
             return node
@@ -381,7 +382,7 @@ class RingChart(Chart):
         # Default to the actual root:
         return node
 
-    def render(self, root, overwrite_root=True):
+    def render(self, root, overwrite_root=True) -> None:
         """Render `root` and all children of it as chart."""
         # Skip over duplicate full circles:
         virt_root = self.find_root(root)
@@ -401,7 +402,7 @@ class RingChart(Chart):
         # Make sure it gets rendered soon:
         self.queue_draw()
 
-    def on_draw(self, area, ctx):
+    def on_draw(self, area, ctx) -> None:
         """Actual signal callback that triggers all the drawing."""
 
         # May happen on empty charts:
@@ -460,7 +461,7 @@ class RingChart(Chart):
                 segment.tooltip
             )
 
-    def on_tooltip_timeout(self, segment):
+    def on_tooltip_timeout(self, segment) -> None:
         """Called once the mouse stayed over a segment for a longer time.
         """
         if self._timeout_id:
@@ -471,7 +472,7 @@ class RingChart(Chart):
         self.queue_draw()
         self._timeout_id = None
 
-    def _hit(self, area, event, click_only=False):
+    def _hit(self, area, event, click_only=False) -> Tuple[bool, None]:
         """Check what segments were hitten by a GdkEvent"""
         alloc = area.get_allocation()
         mid_x, mid_y = alloc.width / 2, alloc.height / 2
@@ -504,7 +505,7 @@ class RingChart(Chart):
 
         return bool(hit_segment), hit_segment
 
-    def on_motion(self, area, event):
+    def on_motion(self, area, event) -> None:
         """Called on pointer motion."""
         hit, segment = self._hit(area, event)
 
@@ -521,7 +522,7 @@ class RingChart(Chart):
 
         self.queue_draw()
 
-    def on_button_press_event(self, area, event):
+    def on_button_press_event(self, area, event) -> None:
         """Called on pointer and keyboard events"""
         hit, segment = self._hit(area, event, click_only=True)
         if hit:
@@ -536,11 +537,11 @@ class ChartStack(Gtk.Stack):
     Provides a loading screen and "nothing" found screen.
     Change between those are crossfaded.
     """
-    LOADING = 'loading'
-    CHART = 'chart'
-    EMPTY = 'empty'
+    LOADING: str = 'loading'
+    CHART: str = 'chart'
+    EMPTY: str = 'empty'
 
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.Stack.__init__(self)
         self.set_transition_duration(750)
         self.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
@@ -564,13 +565,13 @@ class ChartStack(Gtk.Stack):
         )
         self.add_named(self.empty_label, ChartStack.EMPTY)
 
-    def render(self, root):
+    def render(self, root) -> None:
         """Trigger all render procedure"""
         self.chart.render(root)
 
 
 if __name__ == '__main__':
-    def main():
+    def main() -> None:
         """Stupid test main"""
         from shredder.tree import PathTreeModel
         model = PathTreeModel(['/home/sahib'])

@@ -25,10 +25,37 @@ from enum import Enum
 from gi.repository import Gio
 from gi.repository import GLib
 from gi.repository import GObject
+from typing import Any, ClassVar, Dict, List, NoReturn, Tuple, Type
+SPOOKY: int
+CITY: int
+SHA1: int
+SHA256: int
+SHA512: int
+SHA3: int
+MD5: int
+BLAKE2B: int
+BLAKE2S: int
+PARANOID: int
+NONE: int
+BASENAME: int
+EXTENSION: int
+WITHOUT_EXTENSION: int
+IGNORE: int
+SEE: int
+FOLLOW: int
+PARTIAL: int
+TAGGED: int
+UNTAGGED: int
+OFF: bool
+ACTIVE: bool
+REMOVE_DUPES: int
+LINK_DUPES: int
+SYMLINK_DUPES: int
+HARDLINK_DUPES: int
 
 
-LOGGER = logging.getLogger('runner')
-ASCII_COLOR_REGEX = re.compile(r'\x1B\[\d+(.*?)m')
+LOGGER: logging.Logger = logging.getLogger('runner')
+ASCII_COLOR_REGEX: re.Pattern = re.compile(r'\x1B\[\d+(.*?)m')
 
 
 class AlgorithmType(Enum):
@@ -36,7 +63,7 @@ class AlgorithmType(Enum):
     SPOOKY, CITY, SHA1, SHA256, SHA512, SHA3, MD5, \
        BLAKE2B, BLAKE2S, PARANOID = range(1, 11)
 
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         SPOOKY:   ['--algorithm', 'spooky'],
         CITY:     ['--algorithm', 'city'],
         SHA1:     ['--algorithm', 'sha1'],
@@ -53,7 +80,7 @@ class AlgorithmType(Enum):
 class MatchType(Enum):
     """Key: traverse-match"""
     NONE, BASENAME, EXTENSION, WITHOUT_EXTENSION = range(1, 5)
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         NONE: [],
         BASENAME: ['--match-basename'],
         EXTENSION: ['--match-with-extension'],
@@ -64,7 +91,7 @@ class MatchType(Enum):
 class SymlinkType(Enum):
     """Key: general-find-symlinks"""
     IGNORE, SEE, FOLLOW = range(1, 4)
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         IGNORE: ['--no-followlinks'],
         SEE: ['--see-symlinks'],
         FOLLOW: ['--followlinks']
@@ -74,7 +101,7 @@ class SymlinkType(Enum):
 class HiddenType(Enum):
     """Key: traverse-hidden"""
     IGNORE, PARTIAL, FOLLOW = range(1, 4)
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         IGNORE: ['--no-hidden'],
         PARTIAL: ['--partial-hidden'],
         FOLLOW: ['--hidden']
@@ -84,7 +111,7 @@ class HiddenType(Enum):
 class KeepAllType(Enum):
     """Key: computation-keep-all-tagged"""
     NONE, TAGGED, UNTAGGED = range(1, 4)
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         NONE: [],
         TAGGED: ['--keep-all-tagged'],
         UNTAGGED: ['--keep-all-untagged']
@@ -94,7 +121,7 @@ class KeepAllType(Enum):
 class MustMatchType(Enum):
     """Key: computation-must-match-tagged"""
     NONE, TAGGED, UNTAGGED = range(1, 4)
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         NONE: [],
         TAGGED: ['--must-match-tagged'],
         UNTAGGED: ['--must-match-untagged']
@@ -104,7 +131,7 @@ class MustMatchType(Enum):
 class HardlinkType(Enum):
     """Key: "general-find-hardlinks"""
     OFF, ACTIVE = False, True
-    MAPPING = {
+    MAPPING: Dict[bool, List[str]] = {
         ACTIVE: ['--hardlinked'],
         OFF: ['--no-hardlinked']
     }
@@ -113,7 +140,7 @@ class HardlinkType(Enum):
 class HandlerType(Enum):
     """Key: "general-handler-type"""
     REMOVE_DUPES, LINK_DUPES, SYMLINK_DUPES, HARDLINK_DUPES = range(1, 5)
-    MAPPING = {
+    MAPPING: Dict[int, List[str]] = {
         REMOVE_DUPES: ['-c', 'sh:handler=remove'],
         LINK_DUPES: ['-c', 'sh:handler=link'],
         SYMLINK_DUPES: ['-c', 'sh:handler=symlink'],
@@ -124,20 +151,20 @@ class HandlerType(Enum):
 class CrossMountType(Enum):
     """Key: traverse-cross-mounts"""
     OFF, ACTIVE = False, True
-    MAPPING = {
+    MAPPING: Dict[bool, List[str]] = {
         ACTIVE: ['--crossdev'],
         OFF: ['--no-crossdev']
     }
 
 
-def map_cfg(option, val):
+def map_cfg(option, val) -> Any:
     """Helper function to save some characters"""
     return option.MAPPING.value.get(val, [])
 
 
 def _create_rmlint_process(
         cfg, cwd, untagged, tagged, replay_path=None, outputs=None
-):
+) -> Any:
     """Create a correctly configured rmlint GSuprocess for gui purposes.
     If `replay_path` is not None, "--replay `replay_path`" will be appended.
     """
@@ -227,13 +254,13 @@ def _create_rmlint_process(
 
 class Runner(GObject.Object):
     """Wrapper class for a process of rmlint."""
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[Type[str], ...]]] = {
         'lint-added': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'replay-finished': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'process-finished': (GObject.SIGNAL_RUN_FIRST, None, (str, ))
     }
 
-    def __init__(self, settings, untagged_paths, tagged_paths):
+    def __init__(self, settings, untagged_paths, tagged_paths) -> None:
         GObject.Object.__init__(self)
 
         self.settings = settings
@@ -249,7 +276,7 @@ class Runner(GObject.Object):
         self.objects = []
         self.was_replayed = False
 
-    def on_process_termination(self, process, result):
+    def on_process_termination(self, process, result) -> None:
         """Called once GSuprocess sees its child die."""
         # We don't emit process-finished yet here.
         # We still might get some items from the stream.
@@ -267,7 +294,7 @@ class Runner(GObject.Object):
                 # Nothing concrete to say it seems
                 self._message = err.message
 
-    def on_replay_finish(self, process, result):
+    def on_replay_finish(self, process, result) -> None:
         """Called once rmlint --replay finished running."""
         try:
             process.wait_check_finish(result)
@@ -277,7 +304,7 @@ class Runner(GObject.Object):
         finally:
             self.emit('replay-finished')
 
-    def _queue_read(self):
+    def _queue_read(self) -> None:
         """Schedule an async read on process's stdout"""
         if self.process is None:
             return
@@ -288,7 +315,7 @@ class Runner(GObject.Object):
             callback=self.on_io_event
         )
 
-    def on_io_event(self, source, result):
+    def on_io_event(self, source, result) -> None:
         """Called on every async io event."""
         line, _ = source.read_line_finish_utf8(result)
 
@@ -322,7 +349,7 @@ class Runner(GObject.Object):
         # Schedule another read:
         self._queue_read()
 
-    def run(self):
+    def run(self) -> None:
         """Trigger the run of the rmlint process.
         Returns: a `Script` instance.
         """
@@ -341,19 +368,19 @@ class Runner(GObject.Object):
         # Schedule some reads from stdout (where the json gets written)
         self._queue_read()
 
-    def get_json_path(self):
+    def get_json_path(self) -> str:
         """Return /tmp/.../shredder.json if replay() was called in prior."""
         return os.path.join(self._tmpdir.name, 'shredder.json')
 
-    def get_csv_path(self):
+    def get_csv_path(self) -> str:
         """Return /tmp/.../shredder.csv if replay() was called in prior."""
         return os.path.join(self._tmpdir.name, 'shredder.csv')
 
-    def get_sh_path(self):
+    def get_sh_path(self) -> str:
         """Return /tmp/.../shredder.sh if replay() was called in prior."""
         return os.path.join(self._tmpdir.name, 'shredder.sh')
 
-    def replay(self, allowed_paths=None):
+    def replay(self, allowed_paths=None) -> None:
         """Replay the last run using --replay.
 
         Together with `allowed_paths` this allows easy filtering
@@ -402,7 +429,7 @@ class Runner(GObject.Object):
         )
         process.wait_check_async(None, self.on_replay_finish)
 
-    def save(self, dest_path, file_type='sh'):
+    def save(self, dest_path, file_type='sh') -> None:
         """Save the output to `path`.
         The script can be converted to a different format if necessary.
         Valid formats are:
@@ -434,7 +461,7 @@ class Runner(GObject.Object):
             LOGGER.exception('Could not save')
 
 
-def _fix_shell_auto_remove_path(sh_path, temp_path):
+def _fix_shell_auto_remove_path(sh_path, temp_path) -> None:
     """
     Shell scripts contain the path that they were created under.
     This is used to remove the script after a successful run.
@@ -446,7 +473,7 @@ def _fix_shell_auto_remove_path(sh_path, temp_path):
         fd.write(text.replace(temp_path, sh_path))
 
 
-def _strip_ascii_colors(text):
+def _strip_ascii_colors(text) -> Any:
     """Strip ascii colors from `text`"""
     return ASCII_COLOR_REGEX.sub('', text)
 
@@ -455,18 +482,18 @@ class Script(GObject.Object):
     """Wrapper around the shell script generated by an rmlint run.
     `run()` will execute the script (either dry or for real)
     """
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[Type[str], ...]]] = {
         'line-read': (GObject.SIGNAL_RUN_FIRST, None, (str, str)),
         'script-finished': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def __init__(self, script_file):
+    def __init__(self, script_file) -> None:
         GObject.Object.__init__(self)
         self._incomplete_chunk = self._process = self._stream = None
         self.script_file = script_file
 
     @staticmethod
-    def create_dummy():
+    def create_dummy() -> "Script":
         """Create an empty dummy script for testing purpose"""
         _, path = tempfile.mkstemp(prefix='.')
         with open(path, 'w') as handle:
@@ -474,7 +501,7 @@ class Script(GObject.Object):
 
         return Script(path)
 
-    def read(self):
+    def read(self) -> str:
         """Read the script from disk and return it as string.
         """
         # Do not reuse the file descriptor, since it is only valid once.
@@ -483,14 +510,14 @@ class Script(GObject.Object):
         with open(self.script_file, encoding='utf-8', errors='ignore') as handle:
             return _strip_ascii_colors(handle.read())
 
-    def read_bytes(self):
+    def read_bytes(self) -> bytes:
         """Same as read() but do not not attempt conversion to string.
         Return raw bytes instead.
         """
         with open(self.script_file, 'rb') as handle:
             return handle.read()
 
-    def run(self, dry_run=True):
+    def run(self, dry_run=True) -> None:
         """Run the script.
         Will trigger a `line-read` signal for each line it processed
         and one `script-finished` signal once all lines are done.
@@ -504,7 +531,7 @@ class Script(GObject.Object):
         self._stream = None
         self._queue_read()
 
-    def _queue_read(self):
+    def _queue_read(self) -> NoReturn:
         """Schedule a read from rmlint's stdout stream."""
         if self._stream is None:
             assert self._process is not None
@@ -518,7 +545,7 @@ class Script(GObject.Object):
             callback=self._read_chunk
         )
 
-    def _report_line(self, line):
+    def _report_line(self, line) -> None:
         """Postprocess and signal the receival of a single line."""
         if not line or line.strip().startswith("#"):
             return
@@ -534,7 +561,7 @@ class Script(GObject.Object):
 
         self.emit('line-read', prefix.strip(), path.strip())
 
-    def _read_chunk(self, source, result):
+    def _read_chunk(self, source, result) -> None:
         """Called once a new line is ready to be read."""
         try:
             line, _ = source.read_line_finish_utf8(result)
@@ -551,7 +578,7 @@ class Script(GObject.Object):
 
 
 if __name__ == '__main__':
-    def main():
+    def main() -> None:
         """Stupid test main: Run on /usr."""
         settings = Gio.Settings.new('org.gnome.Shredder')
         loop = GLib.MainLoop()

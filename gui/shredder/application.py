@@ -27,12 +27,13 @@ from shredder.views.settings import SettingsView
 from shredder.views.locations import LocationView
 from shredder.views.runner import RunnerView
 from shredder.views.editor import EditorView
+from typing import Any, NoReturn, Optional
 
 
-LOGGER = logging.getLogger('application')
+LOGGER: logging.Logger = logging.getLogger('application')
 
 
-def have_feature(feature):
+def have_feature(feature) -> bool:
     """Execute rmlint --version to check for some feature.
 
     --version will print the compile time configuration of rmlint.
@@ -49,7 +50,7 @@ def have_feature(feature):
     return '+' + feature in data
 
 
-def _create_action(name, callback=None):
+def _create_action(name, callback=None) -> Any:
     """Create a named GAction with a callback for its activation"""
     action = Gio.SimpleAction.new(name, None)
     if callback is not None:
@@ -58,7 +59,7 @@ def _create_action(name, callback=None):
     return action
 
 
-def _load_app_icon():
+def _load_app_icon() -> Any:
     """Load & render the application svg icon from the resource bundle"""
     logo_svg = Gio.resources_lookup_data('/org/gnome/shredder/shredder.svg', 0)
     logo_handle = Rsvg.Handle.new_from_data(logo_svg.get_data())
@@ -70,7 +71,7 @@ def _load_app_icon():
 
 class Application(Gtk.Application):
     """GtkApplication implementation of Shredder."""
-    def __init__(self, options):
+    def __init__(self, options) -> None:
         Gtk.Application.__init__(
             self,
             application_id='org.gnome.Shredder',
@@ -86,12 +87,12 @@ class Application(Gtk.Application):
             LOGGER.error('…and `json-glib-1.0` installed on your system.')
             sys.exit(-1)
 
-    def do_activate(self, **kw):
+    def do_activate(self, **kw) -> NoReturn:
         Gtk.Application.do_activate(self, **kw)
         assert self.win is not None
         self.win.present()
 
-    def do_startup(self, **kw):
+    def do_startup(self, **kw) -> None:
         Gtk.Application.do_startup(self, **kw)
 
         # Make translating strings possible:

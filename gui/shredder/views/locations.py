@@ -24,9 +24,10 @@ from gi.repository import GObject
 
 # Internal:
 from shredder.util import View, IconButton, size_to_human_readable
+from typing import Any, Dict, Optional, Tuple
 
 
-LOGGER = logging.getLogger('locations')
+LOGGER: logging.Logger = logging.getLogger('locations')
 
 
 class DeferSizeLabel(Gtk.Bin):
@@ -35,7 +36,7 @@ class DeferSizeLabel(Gtk.Bin):
     While calculating the widget will look like a spinner, when done the size
     is displayed as normal text label.
     """
-    def __init__(self, path):
+    def __init__(self, path) -> None:
         Gtk.Bin.__init__(self)
 
         spinner = Gtk.Spinner()
@@ -51,7 +52,7 @@ class DeferSizeLabel(Gtk.Bin):
         )
         du_proc.communicate_utf8_async(None, None, self._du_finished)
 
-    def _du_finished(self, du_proc, result):
+    def _du_finished(self, du_proc, result) -> None:
         """Called when the coreutil du finished running. Harvest results."""
         result, du_data, _ = du_proc.communicate_utf8_finish(result)
         if du_data:
@@ -67,13 +68,13 @@ class DeferSizeLabel(Gtk.Bin):
 
 class LocationEntry(Gtk.ListBoxRow):
     """A single entry representing an existing file system location."""
-    preferred = GObject.Property(type=bool, default=False)
+    preferred: Any = GObject.Property(type=bool, default=False)
 
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'shortcut': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         names = self.themed_icon.get_names()
         return {
             "name": self.name,
@@ -81,7 +82,7 @@ class LocationEntry(Gtk.ListBoxRow):
             "icon": names[-1] if names else "folder",
         }
 
-    def __init__(self, name, path, themed_icon, fill_level=None):
+    def __init__(self, name, path, themed_icon, fill_level=None) -> None:
         Gtk.ListBoxRow.__init__(self)
         self.set_size_request(-1, 80)
         self.set_can_focus(False)
@@ -202,7 +203,7 @@ class LocationEntry(Gtk.ListBoxRow):
             size_widget.set_margin_end(20)
             grid.attach(size_widget, 6, 2, 1, 1)
 
-    def on_check_box_toggled(self, btn, _):
+    def on_check_box_toggled(self, btn, _) -> None:
         """Called once the `original` checkbox was hit."""
         ctx = self.get_style_context()
         if btn.get_active():
@@ -213,7 +214,7 @@ class LocationEntry(Gtk.ListBoxRow):
         self.props.preferred = btn.get_active()
 
 
-def cache_file_path():
+def cache_file_path() -> str:
     return os.path.join(
         GLib.get_user_cache_dir(),
         "shredder",
@@ -221,7 +222,7 @@ def cache_file_path():
     )
 
 
-def load_saved_entries():
+def load_saved_entries() -> Any:
     try:
         with open(cache_file_path(), "r") as fd:
             return json.loads(fd.read())
@@ -231,7 +232,7 @@ def load_saved_entries():
         LOGGER.exception("Failed to get location entries unexpected")
 
 
-def store_saved_entries(entries):
+def store_saved_entries(entries) -> None:
     try:
         cache_path = cache_file_path()
         os.makedirs(os.path.dirname(cache_path), mode=0o700, exist_ok=True)
@@ -243,7 +244,7 @@ def store_saved_entries(entries):
 
 class LocationView(View):
     """The actual view instance."""
-    def __init__(self, app):
+    def __init__(self, app) -> None:
         View.__init__(self, app)
         self.selected_locations = []
         self.known_paths = set()
@@ -321,11 +322,11 @@ class LocationView(View):
 
         self.add(grid)
 
-    def _set_title(self):
+    def _set_title(self) -> None:
         """Make it an own method, so we don't need to retype it."""
         self.sub_title = 'Click locations to scan'
 
-    def add_recent_item(self, path):
+    def add_recent_item(self, path) -> None:
         """Add item to GtkRecentManager"""
         data = Gtk.RecentData()
         data.is_private = False
@@ -339,7 +340,7 @@ class LocationView(View):
         if not recent_mgr.add_full(path, data):
             LOGGER.warning('Could not add to recently used: ' + path)
 
-    def load_entries_from_disk(self, entries):
+    def load_entries_from_disk(self, entries) -> None:
         LOGGER.info('Loading entries initially')
 
         for entry in entries:
@@ -352,7 +353,7 @@ class LocationView(View):
         self.show_all()
 
 
-    def load_entries_initially(self, *_):
+    def load_entries_initially(self, *_) -> None:
         """Re-read all LocationEntries from every possible source."""
         LOGGER.info('Refilling location entries')
         recent_mgr = Gtk.RecentManager.get_default()
@@ -421,7 +422,7 @@ class LocationView(View):
 
         self.show_all()
 
-    def add_entry(self, name, path, icon, fill_level=None, idx=-1):
+    def add_entry(self, name, path, icon, fill_level=None, idx=-1) -> Optional[LocationEntry]:
         """Add a new LocationEntry to the list"""
         path = path.strip()
 
@@ -447,14 +448,14 @@ class LocationView(View):
         self.cache_saved_entries()
         return entry
 
-    def cache_saved_entries(self):
+    def cache_saved_entries(self) -> None:
         entries = []
         for child in self.box.get_children():
             entries.append(child.to_dict())
 
         store_saved_entries(entries)
 
-    def on_row_clicked(self, _, row):
+    def on_row_clicked(self, _, row) -> None:
         """Highlight an entry when a row was clicked."""
         style_ctx = row.get_style_context()
         if style_ctx.has_class('selected'):
@@ -466,7 +467,7 @@ class LocationView(View):
 
         self._update_selected_label()
 
-    def _update_selected_label(self):
+    def _update_selected_label(self) -> None:
         """Update the lower count of selected LocationEntries."""
         prefd_paths = sum(rw.props.preferred for rw in self.selected_locations)
         count = len(self.selected_locations)
@@ -480,12 +481,12 @@ class LocationView(View):
         )
         self.revealer.set_reveal_child(bool(self.selected_locations))
 
-    def on_search_changed(self, _):
+    def on_search_changed(self, _) -> None:
         """Called once the user enteres a new search query."""
         if self.is_visible:
             self.box.invalidate_filter()
 
-    def _filter_func(self, row):
+    def _filter_func(self, row) -> bool:
         """Decide if a row should be visible depending on the search term."""
         query = self.search_entry.get_text().lower()
         if query in row.path.lower():
@@ -493,7 +494,7 @@ class LocationView(View):
 
         return query in row.name.lower()
 
-    def on_view_enter(self):
+    def on_view_enter(self) -> None:
         """Called when the view gets visible."""
         self.add_header_widget(self.chooser_button)
         self.chooser_button.show_all()
@@ -506,7 +507,7 @@ class LocationView(View):
                 lambda: self.app_window.views.go_right.set_sensitive(False)
             )
 
-    def on_chooser_button_clicked(self, _):
+    def on_chooser_button_clicked(self, _) -> None:
         """Button click on the location chooser."""
         self.stack.set_visible_child_name('chooser')
         self.app_window.remove_header_widget(self.chooser_button)
@@ -568,7 +569,7 @@ class LocationView(View):
         open_button.show_all()
         close_button.show_all()
 
-    def _run_clicked(self, _):
+    def _run_clicked(self, _) -> None:
         """Switch one view further to the runner view."""
         tagged, untagged = [], []
         for row in self.selected_locations:
@@ -579,19 +580,19 @@ class LocationView(View):
 
         self.scan_paths(untagged, tagged)
 
-    def _shortcut_clicked(self, row):
+    def _shortcut_clicked(self, row) -> None:
         """User clicked on one of the row side arrows."""
         # It's only one path. Do not worry about tagged/untagged.
         self.scan_paths([row.path], [])
 
-    def scan_paths(self, untagged, tagged):
+    def scan_paths(self, untagged, tagged) -> None:
         """Actually go to the main view and trigger scan."""
         main_view = self.app_window.views['runner']
         if tagged or untagged:
             main_view.trigger_run(untagged, tagged)
             self.app_window.views.switch('runner')
 
-    def _del_clicked(self, _):
+    def _del_clicked(self, _) -> None:
         """Delete all selected LocationEntries."""
         for row in self.selected_locations:
             LOGGER.debug('Removing location entry:' + row.path)
@@ -609,6 +610,6 @@ class LocationView(View):
         self._update_selected_label()
         self.cache_saved_entries()
 
-    def on_default_action(self):
+    def on_default_action(self) -> None:
         """Executed on Ctrl-Enter"""
         self._run_clicked(None)

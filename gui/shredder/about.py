@@ -13,22 +13,23 @@ from shredder import APP_TITLE, APP_DESCRIPTION
 
 # External:
 from gi.repository import Gtk, Gio
+from typing import Any, List
 
 
-LOGGER = logging.getLogger('about')
+LOGGER: logging.Logger = logging.getLogger('about')
 
 
-MAIN_AUTHORS = [
+MAIN_AUTHORS: List[str] = [
     'Christopher Pahl <sahib@online.de>',
     'Daniel Thomas <thomas_d_j@yahoo.com.au>'
 ]
 
 
 # Change when needed.
-DOCUMENTERS = MAIN_AUTHORS
+DOCUMENTERS: List[str] = MAIN_AUTHORS
 
 
-def _guess_rmlint_version():
+def _guess_rmlint_version() -> Any:
     """Execute rmlint --version to extract the version.
 
     Shredder is always versioned the same way as rmlint.
@@ -49,7 +50,7 @@ def _guess_rmlint_version():
 
 class AboutDialog(Gtk.AboutDialog):
     """GtkAboutDialog for Shreddder"""
-    def __init__(self, app_win):
+    def __init__(self, app_win) -> None:
         Gtk.AboutDialog.__init__(self)
 
         try:
@@ -77,7 +78,7 @@ class AboutDialog(Gtk.AboutDialog):
 
 
 if __name__ == '__main__':
-    def main():
+    def main() -> None:
         """Show the about dialog as modal window."""
         import os
         from shredder.application import _load_app_icon

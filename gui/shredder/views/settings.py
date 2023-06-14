@@ -29,9 +29,10 @@ from gi.repository import Gio, GLib, Gtk
 # Internal:
 from shredder.util import View, SuggestedButton, DestructiveButton
 from shredder.util import FileSizeRange, MultipleChoiceButton
+from typing import Any, Callable, Dict, Optional
 
 
-LOGGER = logging.getLogger('settings')
+LOGGER: logging.Logger = logging.getLogger('settings')
 
 
 ################
@@ -39,7 +40,7 @@ LOGGER = logging.getLogger('settings')
 ################
 
 
-def boolean_widget(settings, key_name, *_):
+def boolean_widget(settings, key_name, *_) -> Any:
     """Provide a simple widget for a boolean option key"""
     switch = Gtk.Switch()
     settings.bind(key_name, switch, 'active', 0)
@@ -47,7 +48,7 @@ def boolean_widget(settings, key_name, *_):
     return switch
 
 
-def numeric_widget(settings, key_name, *_, step=1):
+def numeric_widget(settings, key_name, *_, step=1) -> Any:
     """Provide a single widget to change a numeric key"""
     # Use GSetting's "reflection" to get key metadata:
     schema = settings.get_property('settings-schema')
@@ -67,7 +68,7 @@ def numeric_widget(settings, key_name, *_, step=1):
     return range_wdgt
 
 
-def range_widget(settings, key_name, *_):
+def range_widget(settings, key_name, *_) -> FileSizeRange:
     """Create a range widget for key types like (tt)"""
     min_val, max_val = settings.get_value(key_name)
     widget = FileSizeRange(min_val, max_val)
@@ -90,7 +91,7 @@ def range_widget(settings, key_name, *_):
     return widget
 
 
-def choice_widget(settings, key_name, summary, _):
+def choice_widget(settings, key_name, summary, _) -> Optional[MultipleChoiceButton]:
     """Create a widget for choosing between a list of selections"""
     schema = settings.props.settings_schema
     key = schema.get_key(key_name)
@@ -131,7 +132,7 @@ VARIANT_TO_WIDGET: dict[str, Callable[[Gio.Settings, str, str, str], Gtk.Widget]
 
 class SettingsView(View):
     """Generic GSettingsView in a modern Gnome like appearance."""
-    def __init__(self, app):
+    def __init__(self, app) -> None:
         View.__init__(
             self, app, sub_title='Configure how duplicates are searched'
         )
@@ -163,7 +164,7 @@ class SettingsView(View):
         # Initialize from current settings:
         self.build()
 
-    def append_section(self, heading):
+    def append_section(self, heading) -> None:
         """Append a new named section for multiple entries with `heading`"""
         box = Gtk.ListBox()
         box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -189,7 +190,7 @@ class SettingsView(View):
         self._grid.attach(label, 0, len(self._grid), 1, 1)
         self._grid.attach(frame, 0, len(self._grid), 1, 1)
 
-    def append_entry(self, section, val_widget, key_name, summary, desc=None):
+    def append_entry(self, section, val_widget, key_name, summary, desc=None) -> None:
         """Append an entry to a named section.
 
         section: A previously inserted section name.
@@ -240,12 +241,12 @@ class SettingsView(View):
             'widget': row
         }
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Reset whole view and keys to their defaults"""
         for key_name in self.app.settings.list_keys():
             self.app.settings.reset(key_name)
 
-    def build(self):
+    def build(self) -> None:
         """Built all entries and sections"""
         gst = self.app.settings
         entry_rows = []
@@ -299,7 +300,7 @@ class SettingsView(View):
     # SIGNAL CALLBACKS #
     ####################
 
-    def on_search_changed(self, _):
+    def on_search_changed(self, _) -> None:
         """Called once the user enteres a new search query."""
         query = self.search_entry.get_text().lower()
 
@@ -327,7 +328,7 @@ class SettingsView(View):
             _set_vis(section_frame, section_visible > 0, 0.2)
             _set_vis(section_label, section_visible > 0, 0.2)
 
-    def on_view_enter(self):
+    def on_view_enter(self) -> None:
         """Called once the view is visible. Delay save of settings."""
         self.save_settings = False
         self.app.settings.delay()
@@ -344,7 +345,7 @@ class SettingsView(View):
         # to have a quick settings change from anywhere in the application.
         self.app_window.views.switch_to_previous_next()
 
-    def on_view_leave(self):
+    def on_view_leave(self) -> None:
         """Called once the view gets out of sight. Revert or apply."""
         if self.save_settings:
             self.app.settings.apply()
@@ -353,12 +354,12 @@ class SettingsView(View):
 
         self.clear_header_widgets()
 
-    def on_apply_settings(self, *_):
+    def on_apply_settings(self, *_) -> None:
         """Callback for the apply button."""
         self.save_settings = True
         self.app_window.views.switch_to_previous()
 
-    def on_reset_to_defaults(self, *_):
+    def on_reset_to_defaults(self, *_) -> None:
         """Callback for the reset button."""
         self.app.settings.revert()
 
@@ -369,13 +370,13 @@ class SettingsView(View):
         self.save_settings = False
         self.app_window.views.switch_to_previous()
 
-    def on_key_changed(self, settings, _):
+    def on_key_changed(self, settings, _) -> None:
         """Called when a key in GSettings changes."""
         is_sensitive = settings.get_has_unapplied()
         self.appy_btn.set_sensitive(is_sensitive)
         self.deny_btn.set_sensitive(is_sensitive)
 
-    def on_default_action(self):
+    def on_default_action(self) -> None:
         """Called on Ctrl-Enter"""
         if self.appy_btn.is_sensitive():
             self.on_apply_settings()

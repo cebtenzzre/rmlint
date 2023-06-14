@@ -13,16 +13,16 @@ if gi.Repository.get_default().enumerate_versions('Polkit'):
     gi.require_version('Polkit', '1.0')
 
 # Name of your application:
-APP_TITLE = 'Shredder'
+APP_TITLE: str = 'Shredder'
 
 # One sentence description of the application:
-APP_DESCRIPTION = 'Find & clean duplicate files'
+APP_DESCRIPTION: str = 'Find & clean duplicate files'
 
 # Use boxy old menus or new popovers?
-APP_USE_TRADITIONAL_MENU = False
+APP_USE_TRADITIONAL_MENU: bool = False
 
 
-def run_gui():
+def run_gui() -> None:
     """Fully take over and run the gui code."""
     # Stdlib:
     import sys

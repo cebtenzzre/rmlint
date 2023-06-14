@@ -15,7 +15,7 @@ of killed files in terms of size.
 import os
 import time
 import logging
-from typing import TYPE_CHECKING
+from typing import Annotated, Any, Dict, Optional, Tuple, TYPE_CHECKING
 
 # External:
 from gi.repository import Gtk
@@ -26,7 +26,7 @@ from gi.repository import GObject
 try:
     from gi.repository import Polkit
 except ImportError:
-    Polkit = None
+    Polkit: Any = None
 
 # Internal:
 from shredder.util import View, IconButton, scrolled, size_to_human_readable
@@ -34,10 +34,10 @@ from shredder.util import MultipleChoiceButton, SuggestedButton
 from shredder.runner import Script
 
 
-LOGGER = logging.getLogger('editor')
+LOGGER: logging.Logger = logging.getLogger('editor')
 
 
-REMOVED_LABEL = '''<big>{s}</big><small> {n} removed</small>
+REMOVED_LABEL: str = '''<big>{s}</big><small> {n} removed</small>
 <small>Currently {t}</small> <b><big>{p}</big></b>
 '''
 
@@ -48,7 +48,7 @@ REMOVED_LABEL = '''<big>{s}</big><small> {n} removed</small>
 try:
     from gi.repository import GtkSource
 
-    def _create_source_view():
+    def _create_source_view() -> Tuple[Any, Any]:
         """Create a suitable text view + buffer for showing a sh script."""
         LOGGER.info('Using GtkSourceView since we have it.')
 
@@ -65,7 +65,7 @@ try:
 
     class _SearchRun:
         """Represent a run through all matches relative a query."""
-        def __init__(self, buffer_, query):
+        def __init__(self, buffer_, query) -> None:
             settings = GtkSource.SearchSettings()
             settings.set_search_text(query)
             settings.set_case_sensitive(False)
@@ -80,7 +80,7 @@ try:
             """Query of this search run"""
             return self.ctx.get_settings().get_search_text()
 
-        def next_hop(self, view):
+        def next_hop(self, view) -> None:
             """Return a GtkTextMark pointing at the next find or None.
 
             All matching items will be highlighted by default.
@@ -95,7 +95,7 @@ try:
             # Trigger actual searching:
             self.ctx.forward_async(offset, None, self.on_forward_finish, view)
 
-        def on_forward_finish(self, source, result, view):
+        def on_forward_finish(self, source, result, view) -> None:
             """Called once GtkSourceSearchContext has finished processing."""
             valid, start, end = self.ctx.forward_finish(result)
             self._last_mark = None
@@ -107,7 +107,7 @@ try:
                 self._last_mark = buffer_.create_mark(None, end, True)
                 view.scroll_mark_onscreen(self._last_mark)
 
-    def _set_source_style(view, style_name):
+    def _set_source_style(view, style_name) -> None:
         """If supported, set a color scheme by name."""
         style = GtkSource.StyleSchemeManager.get_default().get_scheme(
             style_name
@@ -117,7 +117,7 @@ try:
             buffer_ = view.get_buffer()
             buffer_.set_style_scheme(style)
 
-    def _set_source_lang(view, lang):
+    def _set_source_lang(view, lang) -> None:
         """If supported, set a syntax highlighter to use."""
         language = GtkSource.LanguageManager.get_default().get_language(lang)
         buffer_ = view.get_buffer()
@@ -127,10 +127,10 @@ try:
 # This is the bare minimum we support. It's neither pretty nor very useful.
 except ImportError:
     if not TYPE_CHECKING:
-        GtkSource = None
+        GtkSource: Any = None
 
 if not TYPE_CHECKING and GtkSource is None:
-    def _create_source_view():
+    def _create_source_view() -> Tuple[Any, Any]:
         """Create a suitable text view + buffer for showing a sh script."""
         LOGGER.info('No GtkSourceView found.')
 
@@ -156,14 +156,14 @@ if not TYPE_CHECKING and GtkSource is None:
         pass  # Not supported.
 
 
-def _create_running_screen():
+def _create_running_screen() -> Any:
     """Helper to configure a spinner for the delete screen."""
     spinner = Gtk.Spinner()
     spinner.start()
     return spinner
 
 
-def _create_finished_screen(callback):
+def _create_finished_screen(callback) -> Any:
     """Give the user a nice, warm feeling."""
     control_grid = Gtk.Grid()
     control_grid.set_hexpand(False)
@@ -197,7 +197,7 @@ def _create_finished_screen(callback):
 
 class RunningLabel(Gtk.Label):
     """Centered large label showing a size sum and the current deleted path."""
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.Label.__init__(self)
 
         # Basename is more important:
@@ -211,11 +211,11 @@ class RunningLabel(Gtk.Label):
         self._is_dry_run = False
         self.reset()
 
-    def set_is_dry_run(self, is_it):
+    def set_is_dry_run(self, is_it) -> None:
         """If it is a dry run, don't scare the user"""
         self._is_dry_run = is_it
 
-    def push(self, prefix, path):
+    def push(self, prefix, path) -> None:
         """Push a new path to the label, removing the old one."""
         if prefix.lower() == 'keeping':
             return
@@ -234,7 +234,7 @@ class RunningLabel(Gtk.Label):
         )
         self.set_markup(text)
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the counter to initial state (zero)"""
         self._size_sum = 0
         self.push('', '')
@@ -242,9 +242,9 @@ class RunningLabel(Gtk.Label):
 
 class RunButton(IconButton):
     """Customized run button that can change color."""
-    dry_run = GObject.Property(type=bool, default=True)
+    dry_run: Any = GObject.Property(type=bool, default=True)
 
-    def __init__(self, icon, label, state_btn):
+    def __init__(self, icon, label, state_btn) -> None:
         IconButton.__init__(self, icon, label)
         self.state = state_btn
         self.state.connect('notify::active', self._toggle_dry_run)
@@ -258,7 +258,7 @@ class RunButton(IconButton):
         self.state.set_active(True)
         self._toggle_dry_run(self.state)
 
-    def set_sensitive(self, mode):
+    def set_sensitive(self, mode) -> None:
         btn_ctx = self.get_style_context()
 
         if mode:
@@ -269,7 +269,7 @@ class RunButton(IconButton):
         IconButton.set_sensitive(self, mode)
         self.state.set_sensitive(mode)
 
-    def _toggle_dry_run(self, *_):
+    def _toggle_dry_run(self, *_) -> None:
         """Change the color and severeness of the button."""
         ctx = self.get_style_context()
         if not self.state.get_state():
@@ -282,7 +282,7 @@ class RunButton(IconButton):
             self.set_markup("Run in dry mode")
 
 
-def _create_icon_stack():
+def _create_icon_stack() -> Any:
     """Create a small widget that shows alternating icons."""
     icon_stack = Gtk.Stack()
     icon_stack.set_transition_type(
@@ -309,11 +309,11 @@ def _create_icon_stack():
 class ScriptSaverDialog(Gtk.FileChooserWidget):
     """GtkFileChooserWidget tailored for saving a `Script` instance."""
 
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'saved': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
-    def __init__(self, editor_view):
+    def __init__(self, editor_view) -> None:
         Gtk.FileChooserWidget.__init__(self)
 
         self.editor_view = editor_view
@@ -365,7 +365,7 @@ class ScriptSaverDialog(Gtk.FileChooserWidget):
         self.extra_box.set_hexpand(True)
         self.extra_box.set_halign(Gtk.Align.FILL)
 
-    def show_controls(self):
+    def show_controls(self) -> None:
         """Show cancel, save and file type chooser buttons."""
         self.editor_view.add_header_widget(self.extra_box)
         self.editor_view.add_header_widget(
@@ -374,12 +374,12 @@ class ScriptSaverDialog(Gtk.FileChooserWidget):
 
         self.update_file_suggestion()
 
-    def update_file_suggestion(self):
+    def update_file_suggestion(self) -> None:
         """Suggest a name for the script to save."""
         file_type = self.file_type.get_selected_choice() or 'sh'
         self.set_current_name(time.strftime('rmlint-%FT%T%z.' + file_type))
 
-    def on_file_type_changed(self, _):
+    def on_file_type_changed(self, _) -> None:
         """Called once the user chose a different format"""
         current_path = self.get_filename()
         if not current_path:
@@ -394,16 +394,16 @@ class ScriptSaverDialog(Gtk.FileChooserWidget):
                 # No extension. Leave it.
                 pass
 
-    def _exit_from_save(self):
+    def _exit_from_save(self) -> None:
         """Preparation to go back to script view."""
         self.emit('saved')
         self.editor_view.clear_header_widgets()
 
-    def on_cancel_clicked(self, _):
+    def on_cancel_clicked(self, _) -> None:
         """Signal handler for the cancel button."""
         self._exit_from_save()
 
-    def on_save_clicked(self, _):
+    def on_save_clicked(self, _) -> None:
         """Called once the user clicked the `Save` button"""
         file_type = self.file_type.get_selected_choice()
         abs_path = self.get_filename()
@@ -413,7 +413,7 @@ class ScriptSaverDialog(Gtk.FileChooserWidget):
         runner.save(abs_path, file_type)
         self._exit_from_save()
 
-    def on_selection_changed(self, _):
+    def on_selection_changed(self, _) -> None:
         """Called once a file or directory was clicked"""
         filename = self.get_filename()
         self.confirm.set_sensitive(bool(filename))
@@ -431,12 +431,12 @@ class OverlaySaveButton(Gtk.Overlay):
     and a save button to save the script somewhere.
     """
 
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'save-clicked': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'unlock-clicked': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.Overlay.__init__(self)
 
         self._box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -486,7 +486,7 @@ class OverlaySaveButton(Gtk.Overlay):
 
 class EditorView(View):
     """Actual view class."""
-    def __init__(self, win):
+    def __init__(self, win) -> None:
         View.__init__(self, win)
 
         self._last_runner = None
@@ -636,7 +636,7 @@ class EditorView(View):
         except TypeError:
             LOGGER.warning('Old gtk version; skipping through matches will not work.')
 
-    def set_correct_icon(self):
+    def set_correct_icon(self) -> None:
         """Set the correct icon of icon_stack (either warning, skull or info)"""
         icon_name = 'info'
 
@@ -648,7 +648,7 @@ class EditorView(View):
 
         self.icon_stack.set_visible_child_name(icon_name)
 
-    def set_info_review_text(self):
+    def set_info_review_text(self) -> None:
         """Set the normal 'Review the script' text."""
         self.state_btn.show_all()
         self.info_label.set_markup('''
@@ -673,7 +673,7 @@ Will run in </i><b>destructive mode and will delete files!</b><i>
 Please toggle the switch below to go back to dry run:</i></small>
             ''')
 
-    def set_info_help_text(self):
+    def set_info_help_text(self) -> None:
         """Be a bit more helpful on the help dialog."""
         self.info_label.set_markup('''
 <big><b>Save the script for later!</b></big>
@@ -691,11 +691,11 @@ Or you can replay the output later with:
         self.state_btn.hide()
 
 
-    def _switch_back(self):
+    def _switch_back(self) -> None:
         """Switch back from delete-view to script view"""
         self.switch_to_script()
 
-    def switch_to_script(self):
+    def switch_to_script(self) -> None:
         """Read and show the script."""
         self.sub_title = 'Check the results'
         GLib.idle_add(
@@ -710,7 +710,7 @@ Or you can replay the output later with:
         self.stack.set_visible_child_name('danger')
         self.stack.set_sensitive(True)
 
-    def on_search_changed(self, _):
+    def on_search_changed(self, _) -> None:
         """Called once the user enteres a new search query."""
         query = self.search_entry.get_text().lower()
         buffer_ = self.text_view.get_buffer()
@@ -729,7 +729,7 @@ Or you can replay the output later with:
         # Jump one position ahead (or do initial search)
         self._last_search.next_hop(self.text_view)
 
-    def on_run_script_clicked(self, _):
+    def on_run_script_clicked(self, _) -> None:
         """The critical function callback that is run when action is done."""
         self.set_search_mode(False)
         self.sub_title = 'Shreddering. Cross fingers!'
@@ -741,7 +741,7 @@ Or you can replay the output later with:
         self.run_label.set_is_dry_run(self.run_button.dry_run)
         self.script.run(dry_run=self.run_button.dry_run)
 
-    def on_view_enter(self):
+    def on_view_enter(self) -> None:
         """Called once the view becomes visible."""
         self.run_button.set_sensitive(True)
 
@@ -753,12 +753,12 @@ Or you can replay the output later with:
             self.left_stack.set_visible_child_name('loading')
             self.stack.set_sensitive(False)
 
-    def on_replay_finish(self, _, runner):
+    def on_replay_finish(self, _, runner) -> None:
         """Called once ``rmlint --replay`` finished running."""
         LOGGER.info('Loading script from temporary directory')
         self.override_script(Script(runner.get_sh_path()))
 
-    def on_default_action(self):
+    def on_default_action(self) -> None:
         """Called on Ctrl-Enter"""
         visible_screen = self.stack.get_visible_child_name()
         if visible_screen == 'danger':
@@ -766,7 +766,7 @@ Or you can replay the output later with:
         elif visible_screen == 'finished':
             self.switch_to_script()
 
-    def override_script(self, script):
+    def override_script(self, script) -> None:
         """This method is for testing and cmdline use only."""
         LOGGER.info('Loading developer-defined script.')
         self.script = script

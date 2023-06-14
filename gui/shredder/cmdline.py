@@ -15,9 +15,10 @@ import logging
 # External:
 from gi.repository import Gio
 from gi.repository import GLib
+from typing import Any, NoReturn
 
 
-def show_version():
+def show_version() -> NoReturn:
     """Print the version as shown by `rmlint --version`"""
     proc = Gio.Subprocess.new(
         ['rmlint', '--version'],
@@ -31,7 +32,7 @@ def show_version():
     sys.exit(-1)
 
 
-def adjust_loglevel(root_logger, count):
+def adjust_loglevel(root_logger, count) -> None:
     """Convert a -v count to a python loglevel."""
     count = max(0, min(4, count))
 
@@ -44,7 +45,7 @@ def adjust_loglevel(root_logger, count):
     }[count])
 
 
-def parse_arguments(root_logger):
+def parse_arguments(root_logger) -> Any:
     """Parse the cmdline options using GOption."""
     sys.argv[0] = 'shredder'
     parser = GLib.option.OptionParser(
@@ -134,5 +135,5 @@ def parse_arguments(root_logger):
 
 
 if __name__ == '__main__':
-    LOGGER = logging.getLogger('test-cmdline')
+    LOGGER: logging.Logger = logging.getLogger('test-cmdline')
     print(parse_arguments(LOGGER))

@@ -14,19 +14,19 @@ This is a valid example for example:
 import re
 import logging
 from collections import defaultdict
-from typing import Any
+from typing import Callable, Dict, List, Union, Any
 
 try:
     from parsedatetime import Calendar
-    HAS_PARSEDATETIME = True
+    HAS_PARSEDATETIME: bool = True
 except ImportError:
-    HAS_PARSEDATETIME = False
+    HAS_PARSEDATETIME: bool = False
 
 
-LOGGER = logging.getLogger('query')
+LOGGER: logging.Logger = logging.getLogger('query')
 
 
-def check_numeric(matches, value):
+def check_numeric(matches, value) -> bool:
     """Check if numeric `value` matches one of
     the values (single lis) and ranges (two-item list) in `matches`
     """
@@ -51,7 +51,7 @@ class Query:
 
     It should not be directly instantiated.
     """
-    def __init__(self, name, sizes, mtimes, amounts):
+    def __init__(self, name, sizes, mtimes, amounts) -> None:
         """You should not use this."""
         self.name = name
         self.sizes = sizes
@@ -59,13 +59,13 @@ class Query:
         self.amounts = amounts
 
     @staticmethod
-    def parse(query_input):
+    def parse(query_input) -> "Query":
         """Parse a query and return a fresh Query object."""
         result = parse(query_input)
 
         return Query(result['name'], result['size'], result['mtime'], result['count'])
 
-    def issubset(self, other_query):
+    def issubset(self, other_query) -> Any:
         """Check if this query will yield a subset of other_query"""
         if other_query is None or not other_query.name:
             return False
@@ -78,7 +78,7 @@ class Query:
         # Check if previous query is a prefix to this one.
         return self.name.startswith(other_query.name)
 
-    def matches(self, leaf_node, size, mtime, count):
+    def matches(self, leaf_node, size, mtime, count) -> bool:
         """Check if a node matches to this query. Returns True on match"""
         for node in leaf_node.up():
             if self.name in node.name.lower():
@@ -98,7 +98,7 @@ class Query:
         return True
 
 
-def parse_generic_range(value, converter):
+def parse_generic_range(value, converter) -> List[list]:
     """Parse number collections in the form N[-N[,N[-N]]]...
 
     For the actual conversion, `converter` will be called.
@@ -122,7 +122,7 @@ def parse_generic_range(value, converter):
     return results
 
 
-EXPONENTS = {
+EXPONENTS: Dict[str, int] = {
     'B': 0,
     'K': 1,
     'M': 2,
@@ -132,7 +132,7 @@ EXPONENTS = {
 }
 
 
-def parse_size_single(value):
+def parse_size_single(value) -> Union[float, int]:
     """Convert a size description to a byte amount."""
     value = value.upper()
 
@@ -146,7 +146,7 @@ def parse_size_single(value):
     return int(value) * (1024 ** exponent)
 
 
-def parse_mtime_single(value):
+def parse_mtime_single(value) -> Any:
     """Convert a human readable time description to a """
     if not HAS_PARSEDATETIME:
         return int(value)
@@ -161,35 +161,35 @@ def parse_mtime_single(value):
     return guess.timestamp()
 
 
-def parse_size(value):
+def parse_size(value) -> List[list]:
     """Parse size values and ranges."""
     return parse_generic_range(value, parse_size_single)
 
 
-def parse_mtime(value):
+def parse_mtime(value) -> List[list]:
     """Parse mtime values and time ranges."""
     return parse_generic_range(value, parse_mtime_single)
 
 
-def parse_count(value):
+def parse_count(value) -> List[List[int]]:
     """Parse count values and ranges."""
     return parse_generic_range(value, int)
 
 
-VALID_ATTRS = {
+VALID_ATTRS: Dict[str, Callable[[Any], Any]] = {
     'size': parse_size,
     'mtime': parse_mtime,
     'count': parse_count
 }
 
-ATTR_PATTERN = re.compile(
+ATTR_PATTERN: re.Pattern = re.compile(
     r'({attrs}):(.*?)(?=\s|$)'.format(
         attrs='|'.join(VALID_ATTRS.keys())
     )
 )
 
 
-def parse(query):
+def parse(query) -> defaultdict:
     """Actual lowlevel parsing function.
     Extracts arbitrary text and attr-value pairs.
     """

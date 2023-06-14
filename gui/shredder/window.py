@@ -21,17 +21,18 @@ from gi.repository import Gio
 
 # Internal:
 import shredder
+from typing import Any
 
 
 _ = gettext
-LOGGER = logging.getLogger('window')
+LOGGER: logging.Logger = logging.getLogger('window')
 
 
 class ViewSwitcher(Gtk.Box):
     """Implements the logic for switching through views.
     Looks like a linked two button box on the outside.
     """
-    def __init__(self, stack):
+    def __init__(self, stack) -> None:
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL)
         self._stack = stack
         self._prev = None
@@ -54,10 +55,10 @@ class ViewSwitcher(Gtk.Box):
 
         self.show_all()
 
-    def __getitem__(self, name):
+    def __getitem__(self, name) -> Any:
         return self._stack.get_child_by_name(name)
 
-    def _find_curr_index(self):
+    def _find_curr_index(self) -> int:
         """Find the numeric index where the current view lies"""
         visible = self._stack.get_visible_child()
         widgets = list(self._stack)
@@ -67,12 +68,12 @@ class ViewSwitcher(Gtk.Box):
         except ValueError:
             return 0
 
-    def _get_widget_at(self, idx):
+    def _get_widget_at(self, idx) -> Any:
         """Return the widgets at a certain numeric index"""
         idx = max(0, min(len(self._stack) - 1, idx))
         return list(self._stack)[idx]
 
-    def _set_widget_at(self, _=None, step=+1):
+    def _set_widget_at(self, _=None, step=+1) -> None:
         """Step right (or left if step is negative) from current view"""
 
         if self._switch_to_previous_next:
@@ -86,7 +87,7 @@ class ViewSwitcher(Gtk.Box):
         self._set_visible_child(next_widget)
         self._update_sensitivness()
 
-    def _set_visible_child(self, child, update_prev=True):
+    def _set_visible_child(self, child, update_prev=True) -> None:
         """Set and notify about the changed view"""
         prev = self._stack.get_visible_child()
         self._stack.set_visible_child(child)
@@ -104,13 +105,13 @@ class ViewSwitcher(Gtk.Box):
         if update_prev:
             self._prev = prev
 
-    def _update_sensitivness(self):
+    def _update_sensitivness(self) -> None:
         """Check if we need to grey out left/right buttons"""
         idx = self._find_curr_index()
         self.go_left.set_sensitive(idx != 0)
         self.go_right.set_sensitive(idx != len(self._stack) - 1)
 
-    def add_view(self, view, name):
+    def add_view(self, view, name) -> None:
         """Add a new `view` widget to the view switcher.
         It will be selectable by `name`.
         """
@@ -122,7 +123,7 @@ class ViewSwitcher(Gtk.Box):
 
         self._stack.add_named(view, name)
 
-    def switch(self, name):
+    def switch(self, name) -> None:
         """Switch to a certain view by name."""
         if name == self._stack.get_visible_child_name():
             LOGGER.warning('view `%s` already visible.', name)
@@ -132,7 +133,7 @@ class ViewSwitcher(Gtk.Box):
         self._set_visible_child(widget)
         self._update_sensitivness()
 
-    def switch_to_previous(self):
+    def switch_to_previous(self) -> None:
         """Switch to last visible view."""
         if self._prev is None:
             return
@@ -140,16 +141,16 @@ class ViewSwitcher(Gtk.Box):
         self._set_visible_child(self._prev, update_prev=False)
         self._update_sensitivness()
 
-    def switch_to_previous_next(self):
+    def switch_to_previous_next(self) -> None:
         """Next click on direction buttons will call switch_to_previous()"""
         self._switch_to_previous_next = True
 
-    def set_search_mode(self, mode):
+    def set_search_mode(self, mode) -> None:
         """Activate or deactivate search bar for current view."""
         view = self._stack.get_visible_child()
         view.set_search_mode(mode)
 
-    def do_default_action(self):
+    def do_default_action(self) -> None:
         """Emits the default action on the current view.
         This is usually equal to clicking the suggested button.
         """
@@ -164,7 +165,7 @@ class ViewSwitcher(Gtk.Box):
 
 class HeaderBar(Gtk.HeaderBar):
     """Container for the headerbar logic."""
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.HeaderBar.__init__(self)
 
         self.set_title(shredder.APP_TITLE)
@@ -177,7 +178,7 @@ class HeaderBar(Gtk.HeaderBar):
         self.set_size_request(-1, 46)
 
 
-def _create_item(name, action, icon, variant=None):
+def _create_item(name, action, icon, variant=None) -> Any:
     """Create a GMenuItem from an action, optionally with an icon"""
     if variant is not None:
         name = '{n} ({v})'.format(n=name, v=str(variant))
@@ -193,7 +194,7 @@ def _create_item(name, action, icon, variant=None):
 
 class MainWindow(Gtk.ApplicationWindow):
     """Shredder's top level GtkApplicationWindow"""
-    def __init__(self, application):
+    def __init__(self, application) -> None:
         Gtk.ApplicationWindow.__init__(
             self, title='Shredder', application=application
         )
@@ -274,7 +275,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.headerbar.pack_end(search_button)
         self.add(self.main_grid)
 
-    def add_header_widget(self, widget, align=Gtk.Align.END):
+    def add_header_widget(self, widget, align=Gtk.Align.END) -> None:
         """Add a widget to the header, either left or right of the title.
         """
         if align is Gtk.Align.END:
@@ -286,7 +287,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         widget.show_all()
 
-    def remove_header_widget(self, widget):
+    def remove_header_widget(self, widget) -> None:
         """Remove a previously added headerwidget. Noop if it did not exist"""
         if widget in self.headerbar:
             self.headerbar.remove(widget)

@@ -24,9 +24,10 @@ from gi.repository import Gio
 from gi.repository import GObject
 from gi.repository import Pango, PangoCairo
 from gi.repository import GLib
+from typing import Annotated, Any, Dict, List, Optional, Tuple, Type
 
 
-def size_to_human_readable(size):
+def size_to_human_readable(size) -> str:
     """Convert a size in bytes to a human readable string."""
     human_readable = ''
 
@@ -46,7 +47,7 @@ def size_to_human_readable(size):
     return human_readable
 
 
-def load_css_from_data(css_data):
+def load_css_from_data(css_data) -> None:
     """Load css customizations from a bytestring.
     """
     style_provider = Gtk.CssProvider()
@@ -58,14 +59,14 @@ def load_css_from_data(css_data):
     )
 
 
-def scrolled(widget):
+def scrolled(widget) -> Any:
     """Return a Gtk.ScrolledWindow with `widget` inside"""
     scw = Gtk.ScrolledWindow()
     scw.add(widget)
     return scw
 
 
-def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED):
+def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED) -> Optional[str]:
     """Get current theme's color for a certain widget being in `state`"""
     color = None
     sctx = widget.get_style_context()
@@ -82,7 +83,7 @@ def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED):
 
 class IconButton(Gtk.Button):
     """Button with easy icon support."""
-    def __init__(self, icon_name, label=None):
+    def __init__(self, icon_name, label=None) -> None:
         Gtk.Button.__init__(self)
 
         box = Gtk.Box()
@@ -102,7 +103,7 @@ class IconButton(Gtk.Button):
         box.show_all()
         self.add(box)
 
-    def set_markup(self, text):
+    def set_markup(self, text) -> None:
         """Same function as Gtk.Label.set_markup."""
         if self.label is not None:
             self.label.set_markup(text)
@@ -110,7 +111,7 @@ class IconButton(Gtk.Button):
 
 class SuggestedButton(IconButton):
     """Gtk.Button with suggested-action style class pre-added."""
-    def __init__(self, text=None):
+    def __init__(self, text=None) -> None:
         IconButton.__init__(self, 'object-select-symbolic', text or 'Apply')
         self.get_style_context().add_class(
             Gtk.STYLE_CLASS_SUGGESTED_ACTION
@@ -119,14 +120,14 @@ class SuggestedButton(IconButton):
 
 class DestructiveButton(IconButton):
     """Gtk.Button with destructive style class pre-added."""
-    def __init__(self, text=None):
+    def __init__(self, text=None) -> None:
         IconButton.__init__(self, 'user-trash-symbolic', text or 'Cancel')
         self.get_style_context().add_class(
             Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION
         )
 
 
-def create_searchbar(win):
+def create_searchbar(win) -> Tuple[Any, Any]:
     """Create a searchbar that takes the keyboard events of `win`"""
     search_bar = Gtk.SearchBar()
     search_entry = Gtk.SearchEntry()
@@ -164,7 +165,7 @@ def create_searchbar(win):
 
 class InfoBar(Gtk.InfoBar):
     """Easier to use version Gtk.InfoBar."""
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.InfoBar.__init__(self)
         self._label = Gtk.Label()
 
@@ -174,13 +175,13 @@ class InfoBar(Gtk.InfoBar):
         self.set_no_show_all(True)
         self.connect('response', self.on_response)
 
-    def show(self, message, message_type):
+    def show(self, message, message_type) -> None:
         """Show with a certain message and severity level."""
         self.set_message_type(message_type)
         self._label.set_markup(GLib.markup_escape_text(message, -1))
         Gtk.InfoBar.show(self)
 
-    def on_response(self, _, response_id):
+    def on_response(self, _, response_id) -> None:
         """Just hide once an action was done."""
         if response_id == Gtk.ResponseType.CLOSE:
             self.hide()
@@ -189,12 +190,12 @@ class InfoBar(Gtk.InfoBar):
 class View(Gtk.Grid):
     """Default View class that has some utility extras.
     """
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'view-enter': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'view-leave': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def __init__(self, app, sub_title=None):
+    def __init__(self, app, sub_title=None) -> None:
         Gtk.Grid.__init__(self)
         self.scw = Gtk.ScrolledWindow()
         self.scw.set_hexpand(True)
@@ -234,13 +235,13 @@ class View(Gtk.Grid):
         self.connect('view-enter', self._on_view_enter)
         self.connect('view-leave', self._on_view_leave)
 
-    def add(self, widget):
+    def add(self, widget) -> None:
         """Add the root widget to the view.
         It will be placed inside a scrolled window.
         """
         self.scw.add(widget)
 
-    def _on_view_enter(self, _):
+    def _on_view_enter(self, _) -> None:
         """Hidden method that is called once a view change is detected.
         The change will be propagated to the underlying view.
         """
@@ -251,7 +252,7 @@ class View(Gtk.Grid):
         # Restore the sub_title.
         View.sub_title.fset(self, self._sub_title)
 
-    def _on_view_leave(self, _):
+    def _on_view_leave(self, _) -> None:
         """Hidden method that is called once the view gets out of sight.
         If possible the change will be propagated down.
         """
@@ -261,7 +262,7 @@ class View(Gtk.Grid):
         if hasattr(self, 'on_view_leave'):
             self.on_view_leave()
 
-    def show_progress(self, percent):
+    def show_progress(self, percent) -> None:
         """Set a percentage value to display as progress.
 
         If percent is None, the progressbar will pulse without a goal.
@@ -271,12 +272,12 @@ class View(Gtk.Grid):
         if percent is not None:
             self.progressbar.set_fraction(percent)
 
-    def hide_progress(self):
+    def hide_progress(self) -> None:
         """Hide the progressbar from the user.
         """
         self.progressbar_revealer.set_reveal_child(False)
 
-    def show_infobar(self, message, message_type=Gtk.MessageType.INFO):
+    def show_infobar(self, message, message_type=Gtk.MessageType.INFO) -> None:
         """Show an infobar with a text message in it.
 
         Note: Latest gtk version color the infobar always blue.
@@ -285,12 +286,12 @@ class View(Gtk.Grid):
         """
         self.infobar.show(message, message_type)
 
-    def hide_infobar(self):
+    def hide_infobar(self) -> None:
         """Hide an infobar (if displayed)
         """
         self.infobar.hide()
 
-    def set_search_mode(self, active):
+    def set_search_mode(self, active) -> None:
         """Show the search bar.
         """
         # Trigger a fake keypress event on the search bar.
@@ -326,18 +327,18 @@ class View(Gtk.Grid):
         """Is the view currently visible to the user?"""
         return self._is_visible
 
-    def add_header_widget(self, widget, align=Gtk.Align.END):
+    def add_header_widget(self, widget, align=Gtk.Align.END) -> None:
         """Add a widget to the header, either left or right of the title.
         """
         self.app_window.add_header_widget(widget, align)
         self._header_widgets.append(widget)
 
-    def remove_header_widget(self, widget):
+    def remove_header_widget(self, widget) -> None:
         """Remove a previously added headerwidget. Noop if it did not exist"""
         self._header_widgets.remove(widget)
         self.app_window.remove_header_widget(widget)
 
-    def clear_header_widgets(self):
+    def clear_header_widgets(self) -> None:
         """Clear all widget headers of this view"""
         for widget in self._header_widgets:
             self.app_window.remove_header_widget(widget)
@@ -350,15 +351,15 @@ class PopupMenu(Gtk.Menu):
 
     Otherwise it is a normal Gtk.Menu and can be used as such.
     '''
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.Menu.__init__(self)
 
-    def _add_item(self, item):
+    def _add_item(self, item) -> None:
         """Append and show_all for safety"""
         self.append(item)
         self.show_all()
 
-    def simple_add(self, name, callback=None):
+    def simple_add(self, name, callback=None) -> None:
         '''Add a Gtk.MenuItem() with a certain name.
 
         :param callback: Callback that is called when the item is activated
@@ -370,7 +371,7 @@ class PopupMenu(Gtk.Menu):
             item.connect('activate', callback)
         self._add_item(item)
 
-    def simple_add_checkbox(self, name, toggled=None):
+    def simple_add_checkbox(self, name, toggled=None) -> None:
         '''Add a Gtk.CheckMenuItem to the Menu with the initial *state* and
         the callable *toggled* that is called when the state changes.
         '''
@@ -380,12 +381,12 @@ class PopupMenu(Gtk.Menu):
             item.connect('toggled', toggled)
         self._add_item(item)
 
-    def simple_add_separator(self):
+    def simple_add_separator(self) -> None:
         '''Add a Gtk.SeparatorMenuItem to the Menu.
         '''
         self._add_item(Gtk.SeparatorMenuItem())
 
-    def simple_popup(self, button_event):
+    def simple_popup(self, button_event) -> None:
         'A simpler version of GtkMenu.popup(); only requiring GdkEventButton.'
         self.popup(
             None, None, None, None,
@@ -399,20 +400,20 @@ class PopupMenu(Gtk.Menu):
 
 class CellRendererSize(Gtk.CellRendererText):
     """Render the byte size in a human readable form"""
-    size = GObject.Property(type=float, default=0)
+    size: Any = GObject.Property(type=float, default=0)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         Gtk.CellRendererText.__init__(self, **kwargs)
         self.connect('notify::size', CellRendererSize._transform_size)
 
-    def _transform_size(self, _):
+    def _transform_size(self, _) -> None:
         """Convert bytes to human readable sizes on size property changes"""
         self.set_property(
             'text', size_to_human_readable(self.get_property('size'))
         )
 
 
-def _rnd(num):
+def _rnd(num) -> str:
     """Round to minimal decimal places & convert to str"""
     if round(num, 1) % 1:
         return str(round(num, 1))
@@ -420,7 +421,7 @@ def _rnd(num):
         return str(int(num))
 
 
-def pretty_seconds(second_diff):
+def pretty_seconds(second_diff) -> Optional[str]:
     """Convert a second difference to sub-day human readable string"""
     if second_diff < 10:
         return "just now"
@@ -436,7 +437,7 @@ def pretty_seconds(second_diff):
         return _rnd(second_diff / 3600) + " hours ago"
 
 
-def pretty_date(time=False):
+def pretty_date(time=False) -> Any:
     """Get a datetime object or an int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
@@ -461,16 +462,16 @@ def pretty_date(time=False):
 
 class CellRendererModifiedTime(Gtk.CellRendererText):
     """Display an mtime (unix timestamp) as readable difference to now"""
-    mtime = GObject.Property(type=int, default=0)
+    mtime: Any = GObject.Property(type=int, default=0)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         Gtk.CellRendererText.__init__(self, **kwargs)
         self.connect(
             'notify::mtime',
             CellRendererModifiedTime._transform_mtime
         )
 
-    def _transform_mtime(self, _):
+    def _transform_mtime(self, _) -> None:
         """Convert the modification time to a human readable form on change"""
         mtime = self.get_property('mtime')
         if mtime <= 0:
@@ -483,16 +484,16 @@ class CellRendererModifiedTime(Gtk.CellRendererText):
 
 class CellRendererCount(Gtk.CellRendererText):
     """Render a count of objects (1 Object, 2 Objects...)"""
-    count = GObject.Property(type=int, default=-1)
+    count: Any = GObject.Property(type=int, default=-1)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         Gtk.CellRendererText.__init__(self, **kwargs)
         self.connect(
             'notify::count',
             CellRendererCount._transform_count
         )
 
-    def _transform_count(self, _):
+    def _transform_count(self, _) -> None:
         """Convert the count property to a meaningful message.
 
         Negative numbers are regarded as twins,
@@ -514,17 +515,17 @@ class CellRendererCount(Gtk.CellRendererText):
 
 
 class NodeState:
-    NONE = 0
-    ORIGINAL = 1
-    DUPLICATE = 2
+    NONE: int = 0
+    ORIGINAL: int = 1
+    DUPLICATE: int = 2
 
     @staticmethod
-    def should_keep(state):
+    def should_keep(state) -> bool:
         """Check if we should keep a file with this state"""
         return state is NodeState.ORIGINAL or state is NodeState.NONE
 
 
-STATE_TO_SYMBOL = {
+STATE_TO_SYMBOL: Dict[int, str] = {
     NodeState.NONE: '',
     NodeState.ORIGINAL: '<span color="green">✔</span>',
     NodeState.DUPLICATE: '<span color="red">✗</span>',
@@ -536,15 +537,15 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
 
     This cellrenderer caches previously rendered buffers.
     """
-    ICON_SIZE = 10
+    ICON_SIZE: int = 10
 
-    tag = GObject.Property(type=int, default=NodeState.DUPLICATE)
+    tag: Any = GObject.Property(type=int, default=NodeState.DUPLICATE)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         Gtk.CellRendererPixbuf.__init__(self, **kwargs)
         self.set_alignment(0.0, 0.6)
 
-    def do_render(self, ctx, widget, bg, cell, *_):
+    def do_render(self, ctx, widget, bg, cell, *_) -> None:
         """Render a unicode symbol using Pango."""
         tag = self.get_property('tag')
         if tag is NodeState.NONE:
@@ -567,7 +568,7 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
         ctx.move_to(cell.x - fw + xpad, cell.y + fh + ypad)
         PangoCairo.show_layout(ctx, layout)
 
-    def do_get_size(self, _, cell_area):
+    def do_get_size(self, _, cell_area) -> Tuple[Any, Any, Any, Any]:
         xpad = self.get_property('xpad')
         width = height = xpad * 2 + CellRendererLint.ICON_SIZE
 
@@ -588,7 +589,7 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
 
 class ChoiceRow(Gtk.ListBoxRow):
     """Row representing a single choice"""
-    def __init__(self, value, is_default, capitalize=False):
+    def __init__(self, value, is_default, capitalize=False) -> None:
         Gtk.ListBoxRow.__init__(self)
 
         self.value, self.is_default = value, is_default
@@ -617,7 +618,7 @@ class ChoiceRow(Gtk.ListBoxRow):
         box.pack_start(self.symbol, False, False, 0)
         self.add(box)
 
-    def set_show_checkmark(self, state):
+    def set_show_checkmark(self, state) -> None:
         """Choose an icon based on the current `state`"""
         self.symbol.set_visible(state or self.is_default)
 
@@ -645,7 +646,7 @@ class ChoiceRow(Gtk.ListBoxRow):
 
 class CurrentChoiceLabel(Gtk.Label):
     """Helper class for displaying the current choice as label"""
-    def __init__(self, text):
+    def __init__(self, text) -> None:
         Gtk.Label.__init__(self)
         self.set_use_markup(True)
         self.set_choice(text)
@@ -655,7 +656,7 @@ class CurrentChoiceLabel(Gtk.Label):
         """Currently active choice"""
         return self._choice
 
-    def set_choice(self, new_value):
+    def set_choice(self, new_value) -> None:
         """Set choice to a markup'd form of `new_value`"""
         self._choice = new_value
 
@@ -678,11 +679,11 @@ class MultipleChoiceButton(Gtk.Button):
     - Default values are marked with a separate icon.
     - The popup is a GtkPopover.
     """
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'row-selected': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
-    def __init__(self, values, default, selected):
+    def __init__(self, values, default, selected) -> None:
         Gtk.Button.__init__(self)
         self._selected_choice = selected
         self.set_relief(Gtk.ReliefStyle.NONE)
@@ -721,7 +722,7 @@ class MultipleChoiceButton(Gtk.Button):
         # Show the popup once the button was clicked:
         self.connect('clicked', lambda *_: popover.show_all())
 
-    def _set_current_row(self, row):
+    def _set_current_row(self, row) -> None:
         """Set current row & update checkmarks accordingly"""
         for other_row in self.listbox:
             # Might be a different type:
@@ -731,18 +732,18 @@ class MultipleChoiceButton(Gtk.Button):
         self.value_label.set_choice(row.value)
         self._selected_choice = row.value
 
-    def get_selected_choice(self):
+    def get_selected_choice(self) -> Any:
         """Return the currently selected label text"""
         return self._selected_choice
 
-    def set_selected_choice(self, value):
+    def set_selected_choice(self, value) -> None:
         """Set the choice of the widget by name"""
         for row in self.listbox:
             if isinstance(row, ChoiceRow):
                 if row.value == value:
                     self._set_current_row(row)
 
-    def on_update_value(self, _, row, popover):
+    def on_update_value(self, _, row, popover) -> None:
         """Called on a click on a row. Will hide the popover."""
         self._set_current_row(row)
         popover.hide()
@@ -756,7 +757,7 @@ class MultipleChoiceButton(Gtk.Button):
 ############################
 
 
-EXPONENTS = {
+EXPONENTS: Dict[str, int] = {
     'Byte': 0,
     'Kilobyte': 1,
     'Megabyte': 2,
@@ -766,8 +767,8 @@ EXPONENTS = {
 }
 
 
-MAX_EXPONENT = max(EXPONENTS.values())
-SORTED_KEYS = sorted(EXPONENTS.items(), key=itemgetter(1))
+MAX_EXPONENT: int = max(EXPONENTS.values())
+SORTED_KEYS: List[Tuple[str, int]] = sorted(EXPONENTS.items(), key=itemgetter(1))
 
 
 class FileSizeSpinButton(Gtk.Box):
@@ -775,11 +776,11 @@ class FileSizeSpinButton(Gtk.Box):
 
     Works mostly like a GtkSpinButon (and consists of one).
     """
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[Type[int]]]] = {
         'value-changed': (GObject.SIGNAL_RUN_FIRST, None, (int, ))
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL)
 
         self._last_val, self._curr_exp = 1, 1
@@ -801,11 +802,11 @@ class FileSizeSpinButton(Gtk.Box):
         self._entry.connect('value-changed', self.on_value_changed)
         self._units.connect('row-selected', self.on_unit_changed)
 
-    def get_bytes(self):
+    def get_bytes(self) -> int:
         """Get the current number of displayed bytes"""
         return int(self._last_val * (1024 ** self._curr_exp))
 
-    def set_bytes(self, size):
+    def set_bytes(self, size) -> None:
         """Set the current number of displayed bytes"""
         # Find out what unit to use:
         if size == 0:
@@ -821,7 +822,7 @@ class FileSizeSpinButton(Gtk.Box):
         self._set_exponent(exponent)
         self._last_val = display_size
 
-    def _set_exponent(self, exponent):
+    def _set_exponent(self, exponent) -> None:
         """Remember the exponent and select the fitting unit."""
         # linear search for the correct label
         key, value = None, None
@@ -832,7 +833,7 @@ class FileSizeSpinButton(Gtk.Box):
         self._units.set_selected_choice(key)
         self._curr_exp = value
 
-    def on_value_changed(self, spbtn):
+    def on_value_changed(self, spbtn) -> None:
         """Called upon a change in the spinbutton"""
         curr = spbtn.get_value_as_int()
 
@@ -847,7 +848,7 @@ class FileSizeSpinButton(Gtk.Box):
         self._last_val = curr
         self.emit('value-changed', curr)
 
-    def on_unit_changed(self, _):
+    def on_unit_changed(self, _) -> None:
         """Called upon a change in the combobox"""
         label = self._units.get_selected_choice()
         exponent = EXPONENTS.get(label, MAX_EXPONENT)
@@ -860,11 +861,11 @@ class FileSizeRange(Gtk.Grid):
 
     The minimum may not be higher or eqal than than the maximum.
     """
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'value-changed': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def __init__(self, min_val, max_val):
+    def __init__(self, min_val, max_val) -> None:
         Gtk.Grid.__init__(self)
         self._min_wdgt = FileSizeSpinButton()
         self._max_wdgt = FileSizeSpinButton()
@@ -901,7 +902,7 @@ class FileSizeRange(Gtk.Grid):
         """Set the maximum value."""
         self._max_wdgt.set_bytes(val)
 
-    def on_value_changed(self, wdgt, _):
+    def on_value_changed(self, wdgt, _) -> None:
         """Called when any of the both sides change."""
         min_val = self._min_wdgt.get_bytes()
         max_val = self._max_wdgt.get_bytes()
@@ -918,7 +919,7 @@ class FileSizeRange(Gtk.Grid):
 
 
 if __name__ == '__main__':
-    def main():
+    def main() -> None:
         """Test main."""
         win = Gtk.Window()
         win.connect('destroy', Gtk.main_quit)

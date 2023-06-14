@@ -21,7 +21,7 @@ import time
 import logging
 
 from collections import OrderedDict, defaultdict, deque
-from typing import Any, cast
+from typing import Dict, Generator, List, NoReturn, Optional, Set, Tuple, Type, TypeVar, Union, Any, cast
 
 # External:
 from gi.repository import Gtk
@@ -38,24 +38,36 @@ from shredder.util import CellRendererLint
 from shredder.util import PopupMenu, NodeState
 
 from shredder.query import Query
+SIZE: int
+COUNT: int
+MTIME: int
+TAG: int
+CKSUM: int
+PATH: int
+TOOLTIP: int
+
+_T0 = TypeVar('_T0')
+_T2 = TypeVar('_T2')
+_TPathNode = TypeVar('_TPathNode', bound=PathNode)
+_TPathTreeModel = TypeVar('_TPathTreeModel', bound=PathTreeModel)
 
 
-LOGGER = logging.getLogger('tree')
+LOGGER: logging.Logger = logging.getLogger('tree')
 
 
 # Unique ID used for PathTreeModel's GtkTreeIters:
 # Useful for debugging, sometimes iters will
 # not come from our own model and may be invalid.
-PATH_MODEL_STAMP = 0xDEAD
+PATH_MODEL_STAMP: int = 0xDEAD
 
 # Process at max work items before letting the
 # mainloop run for a short time. This is to prevent
 # lagging in the user interface.
 # This does not speed up the operation itself of course.
-PATH_MODEL_CHUNK_SIZE = 500
+PATH_MODEL_CHUNK_SIZE: int = 500
 
 # Wait this much ms before processing the next chunk.
-PATH_MODEL_TIMEOUT_MS = 50
+PATH_MODEL_TIMEOUT_MS: int = 50
 
 
 class Column:
@@ -64,7 +76,7 @@ class Column:
     Only this class needs to be changed when adding/modifying columns.
     """
     SIZE, COUNT, MTIME, TAG, CKSUM, PATH, TOOLTIP = range(7)
-    TYPES = [float, int, int, int, int, str, str]
+    TYPES: List[Type[Union[float, int, str]]] = [float, int, int, int, int, str, str]
 
     @staticmethod
     def make_row(md_map: dict[str, Any]) -> list[float | NodeState | str]:
@@ -103,7 +115,7 @@ class PathNode:
         'is_leaf', 'idx', 'indices', 'depth'
     ]
 
-    def __init__(self, name, parent, metadata=None, children=None):
+    def __init__(self, name, parent, metadata=None, children=None) -> None:
         # Public:
         self.name = name
         self.parent = parent
@@ -118,7 +130,7 @@ class PathNode:
         self.is_leaf = False
         self.depth = (parent.depth + 1) if parent else 0
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Any:
         """Get a column value by its column index.
 
         Some values might get freshly constructed on this call.
@@ -130,7 +142,7 @@ class PathNode:
         else:
             return self.row[idx]
 
-    def append(self, name):
+    def append(self: _TPathNode, name) -> _TPathNode:
         """Append a node as child of this node.
 
         If is_leaf is True the size/count of all intermediate
@@ -144,7 +156,7 @@ class PathNode:
 
         return node
 
-    def make_leaf(self, row):
+    def make_leaf(self, row) -> None:
         """Convert the node to a leaf node.
 
         Metadata will be copied to the node and intermediate
@@ -158,21 +170,21 @@ class PathNode:
             parent.row[Column.COUNT] += 1
             parent.row[Column.SIZE] += row[Column.SIZE]
 
-    def up(self):
+    def up(self) -> Generator[PathNode, Any, None]:
         """Iterate the trie up to root."""
         yield self
         if self.parent is not None:
             yield from self.parent.up()
 
-    def build_path(self):
+    def build_path(self) -> Any:
         """Recursively build the absolute path of this node"""
         return os.path.join(*reversed([n.name for n in self.up()]))
 
-    def build_iter_path(self):
+    def build_iter_path(self) -> List[int]:
         """Recursively build an iter path suitable for GtkTreePath"""
         return list(reversed([n.idx for n in self.up()]))
 
-    def neighbor(self, offset):
+    def neighbor(self, offset) -> Any:
         """Get the neighbor of this node by a certain offset"""
         if self.parent is None:
             return None
@@ -184,7 +196,7 @@ class PathNode:
         return None
 
 
-def _create_root_path_index(index, path, node):
+def _create_root_path_index(index, path, node) -> None:
     """Create a (trie-like) recursive dict as fast root path lookup."""
     curr_map, last_map, name = index, None, ''
 
@@ -196,7 +208,7 @@ def _create_root_path_index(index, path, node):
     last_map[name] = node
 
 
-def _lookup_root_path_index(index, components):
+def _lookup_root_path_index(index, components) -> Any:
     """Lookup a node in the recursive dict by a split path,
     if found the node is returned and components is modified.
     """
@@ -215,11 +227,11 @@ def _lookup_root_path_index(index, components):
 
 class PathTrie(GObject.Object):
     """Python version of rmlint's pathtricia trie."""
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[Any]]] = {
         'node-updated': (GObject.SIGNAL_RUN_FIRST, None, (GObject.TYPE_UINT64, ))
     }
 
-    def __init__(self, root_paths=None):
+    def __init__(self, root_paths=None) -> None:
         GObject.Object.__init__(self)
 
         self.root = PathNode('/', None, {})
@@ -239,13 +251,13 @@ class PathTrie(GObject.Object):
 
         self._groups = defaultdict(list)
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[PathNode, Any, None]:
         return self.iterate(None)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.nodes)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a simple string version of the trie"""
         view = []
         for node in self:
@@ -253,13 +265,13 @@ class PathTrie(GObject.Object):
 
         return '\n'.join(view)
 
-    def __getitem__(self, path):
+    def __getitem__(self, path) -> Any:
         return self.find(path)
 
-    def __setitem__(self, path, value):
+    def __setitem__(self, path, value) -> None:
         self.insert(path, value)
 
-    def iterate(self, node=None):
+    def iterate(self, node: _T0=None) -> Generator[Union[PathNode, _T0], Any, None]:
         """Iterate trie down from node.
         If node is None, root is assumed;
         """
@@ -269,20 +281,20 @@ class PathTrie(GObject.Object):
         for child in node.indices:
             yield from self.iterate(child)
 
-    def lookup_node_id(self, node_id):
+    def lookup_node_id(self, node_id) -> Any:
         """Lookup a node by its id."""
         return self.nodes.get(node_id)
 
-    def update_node(self, node, column_id, value):
+    def update_node(self, node, column_id, value) -> None:
         """Update a PathNode *and* emit a node-updated signal."""
         node.row[column_id] = value
         self.emit('node-updated', id(node))
 
-    def group(self, cksum):
+    def group(self, cksum) -> Any:
         """Get a list of nodes that have the same checksum."""
         return self._groups.get(cksum, [])
 
-    def insert(self, path, row):
+    def insert(self, path, row) -> List[Tuple[Any, bool]]:
         """Insert a path into the trie, with metadata in `row`"""
         components = [comp for comp in path.split('/') if comp]
         curr = _lookup_root_path_index(
@@ -308,7 +320,7 @@ class PathTrie(GObject.Object):
         self.max_depth = max(self.max_depth, curr.depth)
         return new_nodes
 
-    def find(self, path):
+    def find(self, path) -> Any:
         """Find a PathNode in the trie by its path"""
         curr = self.root
         for name in (comp for comp in path.split('/') if comp):
@@ -318,7 +330,7 @@ class PathTrie(GObject.Object):
 
         return curr
 
-    def resolve(self, iter_path):
+    def resolve(self, iter_path) -> Any:
         """Resolve a list of indices to a node from root.
         The list might be for example [0, 0, 2] to go
         two layers down on the left and select the third
@@ -336,7 +348,7 @@ class PathTrie(GObject.Object):
 
         return curr
 
-    def sort(self, column_id, reverse=False, root=None):
+    def sort(self, column_id, reverse=False, root: _T2=None) -> Generator[Tuple[Union[PathNode, _T2], list], Any, None]:
         """Sort the trie nodes by their value in at `column_id`.
         If reverse is True, bigger values appear first.
 
@@ -366,7 +378,7 @@ class PathTrie(GObject.Object):
         for child in children:
             yield from self.sort(column_id, reverse, child)
 
-    def has_leaves(self):
+    def has_leaves(self) -> bool:
         """Check if this trie has any leaf nodes.
         This might be different from nodes that are inserted as sub root nodes,
         or as intermediate directories.
@@ -378,7 +390,7 @@ class PathTrie(GObject.Object):
         return False
 
 
-def make_iter(node):
+def make_iter(node) -> Any:
     """Make a GtkTreeIter, suitable for our PathTreeModel."""
     iter_ = Gtk.TreeIter()
     iter_.stamp = PATH_MODEL_STAMP
@@ -398,7 +410,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         as user_data as workaround. (see make_iter())
     """
 
-    def __init__(self, paths):
+    def __init__(self, paths) -> None:
         super(PathTreeModel, self).__init__()
 
         # Actual data storage:
@@ -433,7 +445,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         # or by directly modifying a PathNode or PathTrie.
         self.trie.connect('node-updated', self.on_node_updated)
 
-    def _update_intermediate_nodes(self):
+    def _update_intermediate_nodes(self) -> bool:
         """Make sure the intermediate nodes get updated in a slow
         but sufficient interval.
         """
@@ -457,7 +469,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     #   Append Machinery   #
     ########################
 
-    def add_path(self, path, row, immediately=False):
+    def add_path(self, path, row, immediately=False) -> None:
         """Add a path, including metadata, to the model.
 
         If immediately is False, the path will be cached and
@@ -476,7 +488,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
                     PATH_MODEL_TIMEOUT_MS, self._add_defer
                 )
 
-    def _update_mtime(self, path, row):
+    def _update_mtime(self, path, row) -> None:
         """Update the mtime by reading it from disk."""
         if row[Column.MTIME] <= 0 and id(row) not in self._mtime_cache:
             # Attempt to read the mtime from file:
@@ -487,7 +499,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
             self._mtime_cache.add(id(row))
 
-    def _add_and_signal(self, path, row):
+    def _add_and_signal(self, path, row) -> None:
         """Actually add the path and its metadata here.
         Also signal the GtkTreeView to update if necessary.
         """
@@ -502,7 +514,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
             self._intermediate_nodes.add(node)
 
-    def _add_defer(self):
+    def _add_defer(self) -> bool:
         """Add a pack of paths to the trie, max 500 at the same time."""
         LOGGER.info(
             'Adding pack: %d/%d',
@@ -526,7 +538,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
         return False
 
-    def lookup_by_path(self, path):
+    def lookup_by_path(self, path) -> Any:
         """Calls trie.find() to find the node attached to a path"""
         return self.trie.find(path)
 
@@ -534,7 +546,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     #     Filter Implementation      #
     ##################################
 
-    def filter_model(self, term):
+    def filter_model(self: _TPathTreeModel, term) -> _TPathTreeModel:
         """Filter the model (and thus update the view) by `query`.
         Instead of modifying the model, a new model is returned,
         which shows only contains the filtered nodes.
@@ -588,7 +600,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     # PyGObject convenience interface #
     ###################################
 
-    def set_value(self, iter_, column, value):
+    def set_value(self, iter_, column, value) -> None:
         """Set the value of a cell.
 
         PyGObject seems to expect a method with this name,
@@ -604,10 +616,10 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         # Signal our change:
         self.row_changed(path, iter_)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.trie)
 
-    def on_node_updated(self, trie, node_id):
+    def on_node_updated(self, trie, node_id) -> None:
         """Called when a node was changed on the outside."""
         node = trie.lookup_node_id(node_id)
 
@@ -615,7 +627,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         if node is not None:
             self._intermediate_nodes.add(node)
 
-    def mark_for_update(self, node):
+    def mark_for_update(self, node) -> None:
         """Mark this node to be updated soon."""
         self._intermediate_nodes.add(node)
 
@@ -623,7 +635,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     # Tree Model Spec Implementation #
     ##################################
 
-    def do_get_iter(self, path):
+    def do_get_iter(self, path) -> Tuple[bool, Any]:
         """Returns a new TreeIter that points at path.
 
         The implementation returns a 2-tuple (bool, TreeIter|None).
@@ -635,7 +647,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         else:
             return (False, None)
 
-    def _iter_move(self, iter_, offset):
+    def _iter_move(self, iter_: _T0, offset) -> Tuple[bool, Optional[_T0]]:
         """Move iter_ by a certain offset."""
         node = self.trie.nodes[iter_.user_data]
         next_node = node.neighbor(offset)
@@ -646,21 +658,21 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
             iter_.user_data = id(next_node)
             return (True, iter_)
 
-    def do_iter_next(self, iter_):
+    def do_iter_next(self, iter_: _T0) -> Tuple[bool, Optional[_T0]]:
         """Returns an iter pointing to the next row or None.
 
         The implementation returns a 2-tuple (bool, TreeIter|None).
         """
         return self._iter_move(iter_, +1)
 
-    def do_iter_previous(self, iter_):
+    def do_iter_previous(self, iter_: _T0) -> Tuple[bool, Optional[_T0]]:
         """Returns an iter pointing to the previous row or None.
 
         The implementation returns a 2-tuple (bool, TreeIter|None).
         """
         return self._iter_move(iter_, -1)
 
-    def do_iter_parent(self, child_iter):
+    def do_iter_parent(self, child_iter) -> Tuple[bool, Any]:
         """Returns an iter pointing to the parent of child_iter or None."""
         node = self.trie.nodes[child_iter.user_data]
         if node.parent:
@@ -668,22 +680,22 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         else:
             return (False, None)
 
-    def do_iter_has_child(self, iter_):
+    def do_iter_has_child(self, iter_) -> bool:
         """True if iter has children."""
         return len(self.trie.nodes[iter_.user_data].children) > 0
 
-    def do_iter_n_children(self, iter_):
+    def do_iter_n_children(self, iter_) -> int:
         """Returns the number of children of iter_"""
         if iter_ is None:
             return 0
         else:
             return len(self.trie.nodes[iter_.user_data].children)
 
-    def do_iter_children(self, parent):
+    def do_iter_children(self, parent) -> Tuple[bool, Any]:
         """Return first child or (False|None)"""
         return self.do_iter_nth_child(parent, 0)
 
-    def do_iter_nth_child(self, parent, nth):
+    def do_iter_nth_child(self, parent, nth) -> Tuple[bool, Any]:
         """Return iter that is set to the nth child of iter."""
         if parent is None:
             node = self.trie.root
@@ -699,25 +711,25 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
         return (False, None)
 
-    def do_get_path(self, iter_):
+    def do_get_path(self, iter_) -> Any:
         """Returns tree path references by iter."""
         node = self.trie.nodes[iter_.user_data]
         return Gtk.TreePath(reversed([parent.idx for parent in node.up()]))
 
-    def do_get_value(self, iter_, column):
+    def do_get_value(self, iter_, column) -> Any:
         """Returns the value for iter and column."""
         node = self.trie.nodes[iter_.user_data]
         return Column.TYPES[column](node[column])
 
-    def do_get_n_columns(self):
+    def do_get_n_columns(self) -> int:
         """Returns the number of columns."""
         return len(Column.TYPES)
 
-    def do_get_column_type(self, column_idx):
+    def do_get_column_type(self, column_idx) -> Any:
         """Returns the type of the column."""
         return Column.TYPES[column_idx]
 
-    def do_get_flags(self):
+    def do_get_flags(self) -> Any:
         """Returns the flags supported by this interface."""
         return Gtk.TreeModelFlags.ITERS_PERSIST
 
@@ -725,7 +737,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     # Misc utility methods #
     ########################
 
-    def iter_to_node(self, iter_):
+    def iter_to_node(self, iter_) -> Any:
         """Convert a GtkTreeIter to the related PathNode"""
         return self.trie.nodes.get(iter_.user_data)
 
@@ -733,7 +745,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     # GtkTreeSortable methods #
     ###########################
 
-    def do_get_sort_column_id(self):
+    def do_get_sort_column_id(self) -> Tuple[bool, Any, Any]:
         """Return the column the model is sorted by.
         Returns (True if sorted, columnd id, order)
         """
@@ -744,7 +756,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         else:
             return (True, self._sort_last_id, self._sort_last_order)
 
-    def do_set_sort_column_id(self, id_, order):
+    def do_set_sort_column_id(self, id_, order) -> None:
         """Sort this model by the values in the column `id_` by `order`.
         The changes should be visible in the treeview immediately.
         """
@@ -770,24 +782,24 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
             if old_ind:
                 self.rows_reordered(path, make_iter(node), old_ind)
 
-    def do_set_sort_func(self, id_, func):
+    def do_set_sort_func(self, id_, func) -> NoReturn:
         """Custom sort functions are hard to implement with tries."""
         raise NotImplementedError('Custom sort funcs are not supported.')
 
-    def do_set_default_sort_func(self, id_, func):
+    def do_set_default_sort_func(self, id_, func) -> NoReturn:
         """Custom sort functions are hard to implement with tries."""
         raise NotImplementedError('Custom sort funcs are not supported.')
 
-    def do_has_default_sort_func(self):
+    def do_has_default_sort_func(self) -> bool:
         """See above, not supported."""
         return False
 
-    def sort(self, id_, order=Gtk.SortType.ASCENDING):
+    def sort(self, id_, order=Gtk.SortType.ASCENDING) -> None:
         """Convenience method for do_set_sort_column_id."""
         self.do_set_sort_column_id(id_, order)
 
 
-def _create_column(title, id_, renderers, fixed_width=100):
+def _create_column(title, id_, renderers, fixed_width=100) -> Any:
     """Convenience method for creating a TreeView Column.
     Several renderers can be given with certain options.
     """
@@ -812,7 +824,7 @@ def _create_column(title, id_, renderers, fixed_width=100):
 
 class PathTreeView(Gtk.TreeView):
     """A GtkTreeView that is readily configured for using PathTreeModel"""
-    def __init__(self):
+    def __init__(self) -> None:
         Gtk.TreeView.__init__(self)
 
         # Enable separator lines:
@@ -863,12 +875,12 @@ class PathTreeView(Gtk.TreeView):
     def get_model(self) -> PathTreeModel:
         return cast(PathTreeModel, super().get_model())
 
-    def set_model(self, model):
+    def set_model(self, model) -> None:
         """Overwrite Gtk.TreeView.set_model, but expand sub root paths"""
         Gtk.TreeView.set_model(self, model)
         self.expand_all()
 
-    def get_selected_nodes(self):
+    def get_selected_nodes(self) -> Generator[Any, Any, None]:
         """Extra convenience method for getting the currently selected nodes"""
         model, rows = self.get_selection().get_selected_rows()
         trie = cast(PathTreeModel, model).trie
@@ -876,14 +888,14 @@ class PathTreeView(Gtk.TreeView):
             node = trie.resolve(tp_path.get_indices())
             yield node
 
-    def get_selected_node(self):
+    def get_selected_node(self) -> Any:
         """Return the first selected node or None."""
         try:
             return next(self.get_selected_nodes())
         except StopIteration:
             return None
 
-    def on_button_press_event(self, event):
+    def on_button_press_event(self, event) -> None:
         """Callback handler only used for mouse clicks."""
         if event.button != 3:
             return
@@ -896,7 +908,7 @@ class PathTreeView(Gtk.TreeView):
     # MENU ENTRY HANDLING #
     #######################
 
-    def on_show_menu(self):
+    def on_show_menu(self) -> PopupMenu:
         """Called during the button-press-event to show the actual menu."""
         # HACK: bind to self, since the ref would get lost.
         self._menu = PopupMenu()
@@ -913,7 +925,7 @@ class PathTreeView(Gtk.TreeView):
         )
         return self._menu
 
-    def on_open_folder(self, _):
+    def on_open_folder(self, _) -> None:
         """Open the selected item or folder via xdg-open."""
         node = self.get_selected_node()
         if node is None:
@@ -927,7 +939,7 @@ class PathTreeView(Gtk.TreeView):
         except GLib.Error as err:
             LOGGER.exception('Could not open directory via xdg-open')
 
-    def on_copy_to_clipboard(self, _):
+    def on_copy_to_clipboard(self, _) -> None:
         """Copy the currently selected full path to the clipboard."""
         node = self.get_selected_node()
         if node is None:
@@ -937,7 +949,7 @@ class PathTreeView(Gtk.TreeView):
         clipboard = Gtk.Clipboard.get_default(Gdk.Display.get_default())
         clipboard.set_text(path, len(path))
 
-    def _toggle_tag_state(self, node_iter):
+    def _toggle_tag_state(self, node_iter) -> None:
         """Iterate over `node_iter` and toggle the `tag` state."""
         model = self.get_model()
         for node in node_iter:
@@ -950,12 +962,12 @@ class PathTreeView(Gtk.TreeView):
 
             self.update_node(node, Column.TAG, new)
 
-    def on_toggle_all(self, _):
+    def on_toggle_all(self, _) -> None:
         """Toggle all nodes in the current visible model."""
         model = self.get_model()
         self._toggle_tag_state(model.trie)
 
-    def on_toggle_selected(self, _):
+    def on_toggle_selected(self, _) -> None:
         """Toggle all selected nodes in the current visible model."""
         nodes = list(self.get_selected_nodes())
         self._toggle_tag_state(nodes)
@@ -987,18 +999,18 @@ class PathTreeView(Gtk.TreeView):
                     self.update_node(twin_node, Column.TAG, NodeState.ORIGINAL)
                     break
 
-    def on_expand_all(self, _):
+    def on_expand_all(self, _) -> None:
         """Just expand everything in the tree."""
         self.expand_all()
 
-    def on_collapse_all(self, _):
+    def on_collapse_all(self, _) -> None:
         """Just collapse everything in the tree."""
         self.collapse_all()
 
-    def set_twin(self, view):
+    def set_twin(self, view) -> None:
         self.twin_view = view
 
-    def update_node(self, node, column_id, value):
+    def update_node(self, node, column_id, value) -> None:
         main_model, twin_model = self.get_model(), self.twin_view.get_model()
         for model in [m for m in (main_model, twin_model) if m]:
             model.trie.update_node(node, column_id, value)
@@ -1008,7 +1020,7 @@ class PathTreeView(Gtk.TreeView):
 
 
 if __name__ == '__main__':
-    def main():
+    def main() -> None:
         """Show a window with the dupe-contents of a user specified path."""
         import sys
 

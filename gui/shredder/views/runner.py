@@ -21,21 +21,22 @@ from shredder.util import MultipleChoiceButton, scrolled
 from shredder.chart import ChartStack
 from shredder.tree import PathTreeView, PathTreeModel, Column
 from shredder.runner import Runner
+from typing import Any, Dict, List, NoReturn, Optional, Tuple
 
 
-LOGGER = logging.getLogger('runview')
-RENDER_CHOICES = ['All', 'Selected', 'Filtered']
+LOGGER: logging.Logger = logging.getLogger('runview')
+RENDER_CHOICES: List[str] = ['All', 'Selected', 'Filtered']
 
 
 class ResultActionBar(Gtk.ActionBar):
     """Down right bar with the controls"""
-    __gsignals__ = {
+    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
         'generate-all-script': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'generate-filtered-script': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'generate-selection-script': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def __init__(self, view):
+    def __init__(self, view) -> None:
         Gtk.ActionBar.__init__(self)
 
         left_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -78,14 +79,14 @@ class ResultActionBar(Gtk.ActionBar):
         self.pack_end(right_box)
         self.set_sensitive(False)
 
-    def set_choice(self, choice):
+    def set_choice(self, choice) -> None:
         """Set the current choice. Might be one of RENDER_CHOICES"""
         if choice not in RENDER_CHOICES:
             raise ValueError("Bad choice for button: " + choice)
 
         self.script_type_btn.set_selected_choice(choice)
 
-    def on_generate_script(self, _):
+    def on_generate_script(self, _) -> None:
         """Called when the left side of the compound button was clicked."""
         choice = self.script_type_btn.get_selected_choice().lower()
 
@@ -98,7 +99,7 @@ class ResultActionBar(Gtk.ActionBar):
         else:
             LOGGER.error('Bug: bad choice selection: %s', choice)
 
-    def set_sensitive(self, mode):
+    def set_sensitive(self, mode) -> None:
         """Set the gen-script button (non)-sensitive and (non)-suggested"""
         btn_ctx = self.script_btn.get_style_context()
         type_ctx = self.script_type_btn.get_style_context()
@@ -113,7 +114,7 @@ class ResultActionBar(Gtk.ActionBar):
         self.script_btn.set_sensitive(mode)
         self.script_type_btn.set_sensitive(mode)
 
-    def is_sensitive(self):
+    def is_sensitive(self) -> Any:
         return self.script_btn.is_sensitive()
 
 
@@ -126,7 +127,7 @@ class RunnerView(View):
         - runner: The current run-instance.
         - model: The data.
     """
-    def __init__(self, app):
+    def __init__(self, app) -> None:
         View.__init__(self, app, 'Running…')
 
         # Public: The runner.
@@ -231,7 +232,7 @@ class RunnerView(View):
 
         self._menu = None
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset internally to freshly initialized."""
         self.is_running = False
         self._script_generated = False
@@ -241,7 +242,7 @@ class RunnerView(View):
         self.chart_stack.set_visible_child_name(ChartStack.LOADING)
         self.actionbar.set_sensitive(False)
 
-    def trigger_run(self, untagged_paths, tagged_paths):
+    def trigger_run(self, untagged_paths, tagged_paths) -> None:
         """Trigger a new run on all paths in `paths`"""
         # Remember last paths for rerun()
         self.reset()
@@ -264,7 +265,7 @@ class RunnerView(View):
         self.is_running = True
         self.show_progress(0)
 
-    def rerun(self):
+    def rerun(self) -> None:
         """Rerun with last given paths."""
         self.trigger_run(*self.last_paths)
 
@@ -272,7 +273,7 @@ class RunnerView(View):
     #     SIGNAL CALLBACKS    #
     ###########################
 
-    def on_search_changed(self, entry):
+    def on_search_changed(self, entry) -> None:
         """Called once the user entered a new query."""
         text = entry.get_text()
 
@@ -288,7 +289,7 @@ class RunnerView(View):
             self.chart_stack.render(sub_model.trie.root)
             self.treeview.set_model(sub_model)
 
-    def on_add_elem(self, runner):
+    def on_add_elem(self, runner) -> None:
         """Called once the runner found a new element."""
         elem = runner.element
         self.model.add_path(elem['path'], Column.make_row(elem))
@@ -297,7 +298,7 @@ class RunnerView(View):
         tick = (elem.get('progress', 0) / 100.0) or None
         self.show_progress(tick)
 
-    def on_process_finish(self, _, error_msg):
+    def on_process_finish(self, _, error_msg) -> None:
         """Called once self.runner finished running."""
         # Make sure we end up at 100% progress and show
         # the progress for a short time after (for the nice cozy feeling)
@@ -315,7 +316,7 @@ class RunnerView(View):
 
         GLib.timeout_add(1000, self.on_delayed_chart_render, -1)
 
-    def on_delayed_chart_render(self, last_size):
+    def on_delayed_chart_render(self, last_size) -> bool:
         """Called after a short delay to reduce chart redraws."""
         model = self.treeview.get_model()
         current_size = len(model)
@@ -335,13 +336,13 @@ class RunnerView(View):
 
         return False
 
-    def rerender_chart(self):
+    def rerender_chart(self) -> None:
         """Re-render the chart from the current model root."""
         LOGGER.info('Refreshing chart.')
         model = self.treeview.get_model()
         self.chart_stack.render(model.trie.root)
 
-    def on_view_enter(self):
+    def on_view_enter(self) -> None:
         """Called when the view enters sight."""
         GLib.idle_add(
             lambda: self.app_window.views.go_right.set_sensitive(
@@ -349,11 +350,11 @@ class RunnerView(View):
             )
         )
 
-    def on_view_leave(self):
+    def on_view_leave(self) -> None:
         """Called when the view leaves sight."""
         self.app_window.views.go_right.set_sensitive(True)
 
-    def on_selection_changed(self, _):
+    def on_selection_changed(self, _) -> None:
         """Called when the user clicks a specific row."""
         node = self.treeview.get_selected_node()
 
@@ -397,7 +398,7 @@ class RunnerView(View):
             self.group_revealer.set_reveal_child(False)
             self.chart_stack.render(node)
 
-    def _generate_script(self, trie, nodes):
+    def _generate_script(self, trie, nodes) -> NoReturn:
         """Do the actual generation work, starting at `node` in `trie`."""
         self._script_generated = True
 
@@ -415,16 +416,16 @@ class RunnerView(View):
         self.app_window.views.go_right.set_sensitive(True)
         self.app_window.views.switch('editor')
 
-    def on_generate_script(self, _):
+    def on_generate_script(self, _) -> NoReturn:
         """Generate the full script."""
         self._generate_script(self.model.trie, [self.model.trie.root])
 
-    def on_generate_filtered_script(self, _):
+    def on_generate_filtered_script(self, _) -> NoReturn:
         """Generate the script with only the visible content."""
         model = self.treeview.get_model()
         self._generate_script(model.trie, [model.trie.root])
 
-    def on_generate_selection_script(self, _):
+    def on_generate_selection_script(self, _) -> None:
         """Generate the script only from the current selected dir or files."""
         model = self.treeview.get_model()
         selected_nodes = self.treeview.get_selected_nodes()
@@ -435,7 +436,7 @@ class RunnerView(View):
 
         self._generate_script(model.trie, selected_nodes)
 
-    def on_default_action(self):
+    def on_default_action(self) -> None:
         """Called on Ctrl-Enter"""
         if self.actionbar.is_sensitive():
             trie = self.model.trie

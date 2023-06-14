@@ -14,7 +14,8 @@ This is a valid example for example:
 import re
 import logging
 from collections import defaultdict
-from typing import Callable, Dict, List, Union, Any
+from collections.abc import Callable
+from typing import Any
 
 try:
     from parsedatetime import Calendar
@@ -98,7 +99,7 @@ class Query:
         return True
 
 
-def parse_generic_range(value, converter) -> List[list]:
+def parse_generic_range(value, converter) -> list[list]:
     """Parse number collections in the form N[-N[,N[-N]]]...
 
     For the actual conversion, `converter` will be called.
@@ -122,7 +123,7 @@ def parse_generic_range(value, converter) -> List[list]:
     return results
 
 
-EXPONENTS: Dict[str, int] = {
+EXPONENTS: dict[str, int] = {
     'B': 0,
     'K': 1,
     'M': 2,
@@ -132,7 +133,7 @@ EXPONENTS: Dict[str, int] = {
 }
 
 
-def parse_size_single(value) -> Union[float, int]:
+def parse_size_single(value) -> float | int:
     """Convert a size description to a byte amount."""
     value = value.upper()
 
@@ -161,22 +162,22 @@ def parse_mtime_single(value) -> Any:
     return guess.timestamp()
 
 
-def parse_size(value) -> List[list]:
+def parse_size(value) -> list[list]:
     """Parse size values and ranges."""
     return parse_generic_range(value, parse_size_single)
 
 
-def parse_mtime(value) -> List[list]:
+def parse_mtime(value) -> list[list]:
     """Parse mtime values and time ranges."""
     return parse_generic_range(value, parse_mtime_single)
 
 
-def parse_count(value) -> List[List[int]]:
+def parse_count(value) -> list[list[int]]:
     """Parse count values and ranges."""
     return parse_generic_range(value, int)
 
 
-VALID_ATTRS: Dict[str, Callable[[Any], Any]] = {
+VALID_ATTRS: dict[str, Callable[[Any], Any]] = {
     'size': parse_size,
     'mtime': parse_mtime,
     'count': parse_count

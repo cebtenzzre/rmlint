@@ -15,7 +15,7 @@ of killed files in terms of size.
 import os
 import time
 import logging
-from typing import Annotated, Any, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 # External:
 from gi.repository import Gtk
@@ -48,7 +48,7 @@ REMOVED_LABEL: str = '''<big>{s}</big><small> {n} removed</small>
 try:
     from gi.repository import GtkSource
 
-    def _create_source_view() -> Tuple[Any, Any]:
+    def _create_source_view() -> tuple[Any, Any]:
         """Create a suitable text view + buffer for showing a sh script."""
         LOGGER.info('Using GtkSourceView since we have it.')
 
@@ -130,7 +130,7 @@ except ImportError:
         GtkSource: Any = None
 
 if not TYPE_CHECKING and GtkSource is None:
-    def _create_source_view() -> Tuple[Any, Any]:
+    def _create_source_view() -> tuple[Any, Any]:
         """Create a suitable text view + buffer for showing a sh script."""
         LOGGER.info('No GtkSourceView found.')
 
@@ -309,7 +309,7 @@ def _create_icon_stack() -> Any:
 class ScriptSaverDialog(Gtk.FileChooserWidget):
     """GtkFileChooserWidget tailored for saving a `Script` instance."""
 
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'saved': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
@@ -431,7 +431,7 @@ class OverlaySaveButton(Gtk.Overlay):
     and a save button to save the script somewhere.
     """
 
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'save-clicked': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'unlock-clicked': (GObject.SIGNAL_RUN_FIRST, None, ())
     }

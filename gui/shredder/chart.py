@@ -10,6 +10,7 @@ The chart is drawn via cairo and a tiny bit of math.
 # Stdlib:
 import math
 import colorsys
+from typing import Any
 
 # Internal:
 from shredder.util import size_to_human_readable
@@ -24,7 +25,6 @@ from gi.repository import GLib
 
 from gi.repository import Pango
 from gi.repository import PangoCairo
-from typing import Any, List, Tuple
 
 
 ANGLE_LIMIT_TOOLTIP: float = math.pi / 32
@@ -38,7 +38,7 @@ ANGLE_LIMIT_VISIBLE: float = math.pi / 256
 ###########################################################
 
 
-def _draw_center_text(ctx, x, y, text, font_size=10, do_draw=True) -> Tuple[Any, Any]:
+def _draw_center_text(ctx, x, y, text, font_size=10, do_draw=True) -> tuple[Any, Any]:
     '''Draw a text at the center of ctx/alloc.
 
     ctx: a cairo Context to draw to
@@ -73,7 +73,7 @@ def _draw_rounded(ctx, area, radius) -> None:
     ctx.close_path()
 
 
-TANGO_TABLE: List[Tuple[float, float, float]] = [
+TANGO_TABLE: list[tuple[float, float, float]] = [
     (0.000, 0.829, 0.94),
     (0.096, 0.747, 0.99),
     (0.104, 0.527, 0.91),
@@ -83,7 +83,7 @@ TANGO_TABLE: List[Tuple[float, float, float]] = [
 ]
 
 
-def _hsv_by_degree(degree) -> Tuple[float, float, float]:
+def _hsv_by_degree(degree) -> tuple[float, float, float]:
     """Convert degree (in rad) to a predefined color.
     Currently only one colorscheme is supported (Tango)
     """
@@ -295,7 +295,7 @@ class Segment:
 
         return self.is_selected
 
-    def middle_point(self, alloc, max_layers) -> Tuple[Any, Any]:
+    def middle_point(self, alloc, max_layers) -> tuple[Any, Any]:
         """Calculate the middle point of the segment.
 
         The middle point is here defined as the mid between
@@ -472,7 +472,7 @@ class RingChart(Chart):
         self.queue_draw()
         self._timeout_id = None
 
-    def _hit(self, area, event, click_only=False) -> Tuple[bool, None]:
+    def _hit(self, area, event, click_only=False) -> tuple[bool, None]:
         """Check what segments were hitten by a GdkEvent"""
         alloc = area.get_allocation()
         mid_x, mid_y = alloc.width / 2, alloc.height / 2

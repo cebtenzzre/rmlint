@@ -7,26 +7,26 @@
 # Stdlib:
 import re
 import logging
+from typing import Any
 
 # Internal
 from shredder import APP_TITLE, APP_DESCRIPTION
 
 # External:
 from gi.repository import Gtk, Gio
-from typing import Any, List
 
 
 LOGGER: logging.Logger = logging.getLogger('about')
 
 
-MAIN_AUTHORS: List[str] = [
+MAIN_AUTHORS: list[str] = [
     'Christopher Pahl <sahib@online.de>',
     'Daniel Thomas <thomas_d_j@yahoo.com.au>'
 ]
 
 
 # Change when needed.
-DOCUMENTERS: List[str] = MAIN_AUTHORS
+DOCUMENTERS: list[str] = MAIN_AUTHORS
 
 
 def _guess_rmlint_version() -> Any:

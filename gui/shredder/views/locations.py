@@ -15,6 +15,7 @@ Also show the directory size alongside.
 import os
 import json
 import logging
+from typing import Any
 
 # External:
 from gi.repository import Gtk
@@ -24,7 +25,6 @@ from gi.repository import GObject
 
 # Internal:
 from shredder.util import View, IconButton, size_to_human_readable
-from typing import Any, Dict, Optional, Tuple
 
 
 LOGGER: logging.Logger = logging.getLogger('locations')
@@ -70,11 +70,11 @@ class LocationEntry(Gtk.ListBoxRow):
     """A single entry representing an existing file system location."""
     preferred: Any = GObject.Property(type=bool, default=False)
 
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'shortcut': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         names = self.themed_icon.get_names()
         return {
             "name": self.name,
@@ -422,7 +422,7 @@ class LocationView(View):
 
         self.show_all()
 
-    def add_entry(self, name, path, icon, fill_level=None, idx=-1) -> Optional[LocationEntry]:
+    def add_entry(self, name, path, icon, fill_level=None, idx=-1) -> LocationEntry | None:
         """Add a new LocationEntry to the list"""
         path = path.strip()
 

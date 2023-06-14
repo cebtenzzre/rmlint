@@ -14,6 +14,7 @@ Notable classes:
 import logging
 from functools import partial
 from gettext import gettext
+from typing import Any
 
 # External:
 from gi.repository import Gtk
@@ -21,7 +22,6 @@ from gi.repository import Gio
 
 # Internal:
 import shredder
-from typing import Any
 
 
 _ = gettext

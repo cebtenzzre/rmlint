@@ -9,6 +9,7 @@ Shows the chart and a treeview of suspicious files.
 
 # Stdlib:
 import logging
+from typing import Any, NoReturn
 
 # External:
 from gi.repository import Gtk
@@ -21,16 +22,15 @@ from shredder.util import MultipleChoiceButton, scrolled
 from shredder.chart import ChartStack
 from shredder.tree import PathTreeView, PathTreeModel, Column
 from shredder.runner import Runner
-from typing import Any, Dict, List, NoReturn, Optional, Tuple
 
 
 LOGGER: logging.Logger = logging.getLogger('runview')
-RENDER_CHOICES: List[str] = ['All', 'Selected', 'Filtered']
+RENDER_CHOICES: list[str] = ['All', 'Selected', 'Filtered']
 
 
 class ResultActionBar(Gtk.ActionBar):
     """Down right bar with the controls"""
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'generate-all-script': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'generate-filtered-script': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'generate-selection-script': (GObject.SIGNAL_RUN_FIRST, None, ())

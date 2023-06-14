@@ -11,11 +11,11 @@ Some options are processed immediately however.
 import os
 import sys
 import logging
+from typing import Any, NoReturn
 
 # External:
 from gi.repository import Gio
 from gi.repository import GLib
-from typing import Any, NoReturn
 
 
 def show_version() -> NoReturn:

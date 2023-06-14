@@ -22,6 +22,7 @@ import logging
 from collections.abc import Callable
 from operator import itemgetter
 from functools import partial
+from typing import Any
 
 # External:
 from gi.repository import Gio, GLib, Gtk
@@ -29,7 +30,6 @@ from gi.repository import Gio, GLib, Gtk
 # Internal:
 from shredder.util import View, SuggestedButton, DestructiveButton
 from shredder.util import FileSizeRange, MultipleChoiceButton
-from typing import Any, Callable, Dict, Optional
 
 
 LOGGER: logging.Logger = logging.getLogger('settings')
@@ -91,7 +91,7 @@ def range_widget(settings, key_name, *_) -> FileSizeRange:
     return widget
 
 
-def choice_widget(settings, key_name, summary, _) -> Optional[MultipleChoiceButton]:
+def choice_widget(settings, key_name, summary, _) -> MultipleChoiceButton | None:
     """Create a widget for choosing between a list of selections"""
     schema = settings.props.settings_schema
     key = schema.get_key(key_name)

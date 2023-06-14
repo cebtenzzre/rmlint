@@ -16,6 +16,7 @@ import math
 from datetime import datetime
 from operator import itemgetter
 from enum import Enum
+from typing import Any
 
 # External:
 from gi.repository import Gtk
@@ -24,7 +25,6 @@ from gi.repository import Gio
 from gi.repository import GObject
 from gi.repository import Pango, PangoCairo
 from gi.repository import GLib
-from typing import Annotated, Any, Dict, List, Optional, Tuple, Type
 
 
 def size_to_human_readable(size) -> str:
@@ -66,7 +66,7 @@ def scrolled(widget) -> Any:
     return scw
 
 
-def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED) -> Optional[str]:
+def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED) -> str | None:
     """Get current theme's color for a certain widget being in `state`"""
     color = None
     sctx = widget.get_style_context()
@@ -127,7 +127,7 @@ class DestructiveButton(IconButton):
         )
 
 
-def create_searchbar(win) -> Tuple[Any, Any]:
+def create_searchbar(win) -> tuple[Any, Any]:
     """Create a searchbar that takes the keyboard events of `win`"""
     search_bar = Gtk.SearchBar()
     search_entry = Gtk.SearchEntry()
@@ -190,7 +190,7 @@ class InfoBar(Gtk.InfoBar):
 class View(Gtk.Grid):
     """Default View class that has some utility extras.
     """
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'view-enter': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'view-leave': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
@@ -421,7 +421,7 @@ def _rnd(num) -> str:
         return str(int(num))
 
 
-def pretty_seconds(second_diff) -> Optional[str]:
+def pretty_seconds(second_diff) -> str | None:
     """Convert a second difference to sub-day human readable string"""
     if second_diff < 10:
         return "just now"
@@ -525,7 +525,7 @@ class NodeState:
         return state is NodeState.ORIGINAL or state is NodeState.NONE
 
 
-STATE_TO_SYMBOL: Dict[int, str] = {
+STATE_TO_SYMBOL: dict[int, str] = {
     NodeState.NONE: '',
     NodeState.ORIGINAL: '<span color="green">✔</span>',
     NodeState.DUPLICATE: '<span color="red">✗</span>',
@@ -568,7 +568,7 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
         ctx.move_to(cell.x - fw + xpad, cell.y + fh + ypad)
         PangoCairo.show_layout(ctx, layout)
 
-    def do_get_size(self, _, cell_area) -> Tuple[Any, Any, Any, Any]:
+    def do_get_size(self, _, cell_area) -> tuple[Any, Any, Any, Any]:
         xpad = self.get_property('xpad')
         width = height = xpad * 2 + CellRendererLint.ICON_SIZE
 
@@ -679,7 +679,7 @@ class MultipleChoiceButton(Gtk.Button):
     - Default values are marked with a separate icon.
     - The popup is a GtkPopover.
     """
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'row-selected': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
@@ -757,7 +757,7 @@ class MultipleChoiceButton(Gtk.Button):
 ############################
 
 
-EXPONENTS: Dict[str, int] = {
+EXPONENTS: dict[str, int] = {
     'Byte': 0,
     'Kilobyte': 1,
     'Megabyte': 2,
@@ -768,7 +768,7 @@ EXPONENTS: Dict[str, int] = {
 
 
 MAX_EXPONENT: int = max(EXPONENTS.values())
-SORTED_KEYS: List[Tuple[str, int]] = sorted(EXPONENTS.items(), key=itemgetter(1))
+SORTED_KEYS: list[tuple[str, int]] = sorted(EXPONENTS.items(), key=itemgetter(1))
 
 
 class FileSizeSpinButton(Gtk.Box):
@@ -776,7 +776,7 @@ class FileSizeSpinButton(Gtk.Box):
 
     Works mostly like a GtkSpinButon (and consists of one).
     """
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[Type[int]]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[type[int]]]] = {
         'value-changed': (GObject.SIGNAL_RUN_FIRST, None, (int, ))
     }
 
@@ -861,7 +861,7 @@ class FileSizeRange(Gtk.Grid):
 
     The minimum may not be higher or eqal than than the maximum.
     """
-    __gsignals__: Dict[str, Tuple[Any, None, Tuple[()]]] = {
+    __gsignals__: dict[str, tuple[Any, None, tuple[()]]] = {
         'value-changed': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 

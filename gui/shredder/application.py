@@ -12,6 +12,7 @@ import os
 import sys
 import gettext
 import logging
+from typing import Any, NoReturn
 
 # External:
 from gi.repository import Gtk, Gio, Rsvg, GdkPixbuf
@@ -27,7 +28,6 @@ from shredder.views.settings import SettingsView
 from shredder.views.locations import LocationView
 from shredder.views.runner import RunnerView
 from shredder.views.editor import EditorView
-from typing import Any, NoReturn, Optional
 
 
 LOGGER: logging.Logger = logging.getLogger('application')

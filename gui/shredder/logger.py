@@ -10,7 +10,6 @@ It has colors and symbols! Enough reasoning.
 # Stdlib:
 import logging
 import logging.handlers
-from typing import Dict
 
 
 COLORED_FORMAT: str = "%(asctime)s%(reset)s %(log_color)s[logsymbol] \
@@ -21,7 +20,7 @@ SIMPLE_FORMAT: str = "%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)3d] \
 %(name)s: %(message)s"
 
 DATE_FORMAT: str = "%H:%M:%S"
-UNICODE_ICONS: Dict[int, str] = {
+UNICODE_ICONS: dict[int, str] = {
     logging.DEBUG: '⚙',
     logging.INFO: '⚐',
     logging.WARNING: '⚠',

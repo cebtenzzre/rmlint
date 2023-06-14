@@ -439,7 +439,7 @@ def pretty_seconds(second_diff) -> str | None:
     return None
 
 
-def pretty_date(time: bool = False) -> Any:
+def pretty_date(time) -> Any:
     """Get a datetime object or an int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc

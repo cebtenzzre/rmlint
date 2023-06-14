@@ -286,6 +286,7 @@ class RunnerView(View):
 
         sub_model = self.model.filter_model(text)
         if sub_model is not self.treeview.get_model():
+            assert sub_model is not None
             self.chart_stack.render(sub_model.trie.root)
             self.treeview.set_model(sub_model)
 

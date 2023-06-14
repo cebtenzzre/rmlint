@@ -261,7 +261,7 @@ class Chart(Gtk.DrawingArea):
 
 class Segment:
     """Helper and data class for a single segment in a RingChart."""
-    def __init__(self, node, layer, degree, size, tooltip=None) -> None:
+    def __init__(self, node, layer, degree, size, tooltip: Any | None = None) -> None:
         self.node = node
         self.layer, self.degree, self.size = layer, degree, size
         self.degree = math.fmod(self.degree, math.pi * 2)
@@ -340,7 +340,7 @@ class RingChart(Chart):
         self._selected_segment = None
         self._last_root = None
 
-    def recursive_angle(self, node, angle, offset, layer_offset=0) -> None:
+    def recursive_angle(self, node, angle, offset, layer_offset: int=0) -> None:
         """Calculates the angles of the segments and stores them in a
         list that is ordered by Z-Depth, so the plot appears to be layered
         with the root circle on top. This resembles a depth first traversal.
@@ -383,7 +383,7 @@ class RingChart(Chart):
         # Default to the actual root:
         return node
 
-    def render(self, root, overwrite_root=True) -> None:
+    def render(self, root, overwrite_root: bool = True) -> None:
         """Render `root` and all children of it as chart."""
         # Skip over duplicate full circles:
         virt_root = self.find_root(root)

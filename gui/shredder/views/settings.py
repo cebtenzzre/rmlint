@@ -48,7 +48,7 @@ def boolean_widget(settings, key_name, *_) -> Any:
     return switch
 
 
-def numeric_widget(settings, key_name, *_, step=1) -> Any:
+def numeric_widget(settings, key_name, *_, step: int = 1) -> Any:
     """Provide a single widget to change a numeric key"""
     # Use GSetting's "reflection" to get key metadata:
     schema = settings.get_property('settings-schema')
@@ -190,7 +190,7 @@ class SettingsView(View):
         self._grid.attach(label, 0, len(self._grid), 1, 1)
         self._grid.attach(frame, 0, len(self._grid), 1, 1)
 
-    def append_entry(self, section, val_widget, key_name, summary, desc=None) -> None:
+    def append_entry(self, section, val_widget, key_name, summary, desc: Any | None = None) -> None:
         """Append an entry to a named section.
 
         section: A previously inserted section name.

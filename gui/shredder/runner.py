@@ -363,7 +363,7 @@ class Runner(GObject.Object):
         """Return /tmp/.../shredder.sh if replay() was called in prior."""
         return os.path.join(self._tmpdir.name, 'shredder.sh')
 
-    def replay(self, allowed_paths=None) -> None:
+    def replay(self, allowed_paths: Any | None = None) -> None:
         """Replay the last run using --replay.
 
         Together with `allowed_paths` this allows easy filtering
@@ -412,7 +412,7 @@ class Runner(GObject.Object):
         )
         process.wait_check_async(None, self.on_replay_finish)
 
-    def save(self, dest_path, file_type='sh') -> None:
+    def save(self, dest_path, file_type: str = 'sh') -> None:
         """Save the output to `path`.
         The script can be converted to a different format if necessary.
         Valid formats are:
@@ -502,7 +502,7 @@ class Script(GObject.Object):
         with open(self.script_file, 'rb') as handle:
             return handle.read()
 
-    def run(self, dry_run=True) -> None:
+    def run(self, dry_run: bool = True) -> None:
         """Run the script.
         Will trigger a `line-read` signal for each line it processed
         and one `script-finished` signal once all lines are done.

@@ -106,7 +106,7 @@ class PathNode:
         'is_leaf', 'idx', 'indices', 'depth'
     ]
 
-    def __init__(self, name, parent, metadata=None, children=None) -> None:
+    def __init__(self, name, parent, metadata: Any | None = None, children: Any | None = None) -> None:
         # Public:
         self.name = name
         self.parent = parent
@@ -222,7 +222,7 @@ class PathTrie(GObject.Object):
         'node-updated': (GObject.SIGNAL_RUN_FIRST, None, (GObject.TYPE_UINT64, ))
     }
 
-    def __init__(self, root_paths=None) -> None:
+    def __init__(self, root_paths: Any | None = None) -> None:
         GObject.Object.__init__(self)
 
         self.root = PathNode('/', None, {})
@@ -340,7 +340,7 @@ class PathTrie(GObject.Object):
 
         return curr
 
-    def sort(self, column_id, reverse=False, root: PathNode | None = None) -> Generator[tuple[PathNode, list], Any, None]:
+    def sort(self, column_id, reverse: bool = False, root: PathNode | None = None) -> Generator[tuple[PathNode, list], Any, None]:
         """Sort the trie nodes by their value in at `column_id`.
         If reverse is True, bigger values appear first.
 
@@ -463,7 +463,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     #   Append Machinery   #
     ########################
 
-    def add_path(self, path, row, immediately=False) -> None:
+    def add_path(self, path, row, immediately: bool = False) -> None:
         """Add a path, including metadata, to the model.
 
         If immediately is False, the path will be cached and
@@ -869,7 +869,7 @@ class PathTreeView(Gtk.TreeView):
     def get_model(self) -> PathTreeModel:
         return cast(PathTreeModel, super().get_model())
 
-    def set_model(self, model=None) -> None:
+    def set_model(self, model: Any | None = None) -> None:
         """Overwrite Gtk.TreeView.set_model, but expand sub root paths"""
         Gtk.TreeView.set_model(self, model)
         self.expand_all()

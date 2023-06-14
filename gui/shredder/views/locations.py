@@ -82,7 +82,7 @@ class LocationEntry(Gtk.ListBoxRow):
             "icon": names[-1] if names else "folder",
         }
 
-    def __init__(self, name, path, themed_icon, fill_level=None) -> None:
+    def __init__(self, name, path, themed_icon, fill_level: Any | None = None) -> None:
         Gtk.ListBoxRow.__init__(self)
         self.set_size_request(-1, 80)
         self.set_can_focus(False)
@@ -422,7 +422,7 @@ class LocationView(View):
 
         self.show_all()
 
-    def add_entry(self, name, path, icon, fill_level=None, idx=-1) -> LocationEntry | None:
+    def add_entry(self, name, path, icon, fill_level: Any | None = None, idx: int=-1) -> LocationEntry | None:
         """Add a new LocationEntry to the list"""
         path = path.strip()
 

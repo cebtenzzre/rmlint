@@ -66,7 +66,7 @@ def scrolled(widget) -> Any:
     return scw
 
 
-def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED) -> str | None:
+def get_theme_color(widget, background: bool = True, state=Gtk.StateFlags.SELECTED) -> str | None:
     """Get current theme's color for a certain widget being in `state`"""
     color = None
     sctx = widget.get_style_context()
@@ -84,7 +84,7 @@ def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED) -> s
 
 class IconButton(Gtk.Button):
     """Button with easy icon support."""
-    def __init__(self, icon_name, label=None) -> None:
+    def __init__(self, icon_name, label: Any | None = None) -> None:
         Gtk.Button.__init__(self)
 
         box = Gtk.Box()
@@ -112,7 +112,7 @@ class IconButton(Gtk.Button):
 
 class SuggestedButton(IconButton):
     """Gtk.Button with suggested-action style class pre-added."""
-    def __init__(self, text=None) -> None:
+    def __init__(self, text: Any | None = None) -> None:
         IconButton.__init__(self, 'object-select-symbolic', text or 'Apply')
         self.get_style_context().add_class(
             Gtk.STYLE_CLASS_SUGGESTED_ACTION
@@ -121,7 +121,7 @@ class SuggestedButton(IconButton):
 
 class DestructiveButton(IconButton):
     """Gtk.Button with destructive style class pre-added."""
-    def __init__(self, text=None) -> None:
+    def __init__(self, text: Any | None = None) -> None:
         IconButton.__init__(self, 'user-trash-symbolic', text or 'Cancel')
         self.get_style_context().add_class(
             Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION
@@ -196,7 +196,7 @@ class View(Gtk.Grid):
         'view-leave': (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    def __init__(self, app, sub_title=None) -> None:
+    def __init__(self, app, sub_title: Any | None = None) -> None:
         Gtk.Grid.__init__(self)
         self.scw = Gtk.ScrolledWindow()
         self.scw.set_hexpand(True)
@@ -318,7 +318,7 @@ class View(Gtk.Grid):
         return self._sub_title
 
     @sub_title.setter
-    def sub_title(self, new_sub_title):
+    def sub_title(self, new_sub_title) -> None:
         """Setter for sub_title. Use to describe current step."""
         self.app_window.headerbar.set_subtitle(new_sub_title)
         self._sub_title = new_sub_title
@@ -360,7 +360,7 @@ class PopupMenu(Gtk.Menu):
         self.append(item)
         self.show_all()
 
-    def simple_add(self, name, callback=None) -> None:
+    def simple_add(self, name, callback: Any | None = None) -> None:
         '''Add a Gtk.MenuItem() with a certain name.
 
         :param callback: Callback that is called when the item is activated
@@ -372,7 +372,7 @@ class PopupMenu(Gtk.Menu):
             item.connect('activate', callback)
         self._add_item(item)
 
-    def simple_add_checkbox(self, name, toggled=None) -> None:
+    def simple_add_checkbox(self, name, toggled: Any | None = None) -> None:
         '''Add a Gtk.CheckMenuItem to the Menu with the initial *state* and
         the callable *toggled* that is called when the state changes.
         '''
@@ -439,7 +439,7 @@ def pretty_seconds(second_diff) -> str | None:
     return None
 
 
-def pretty_date(time=False) -> Any:
+def pretty_date(time: bool = False) -> Any:
     """Get a datetime object or an int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
@@ -570,7 +570,7 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
         ctx.move_to(cell.x - fw + xpad, cell.y + fh + ypad)
         PangoCairo.show_layout(ctx, layout)
 
-    def do_get_size(self, widget, cell_area=None) -> tuple[Any, Any, Any, Any]:
+    def do_get_size(self, widget, cell_area: Any | None = None) -> tuple[Any, Any, Any, Any]:
         xpad = self.get_property('xpad')
         width = height = xpad * 2 + CellRendererLint.ICON_SIZE
 
@@ -591,7 +591,7 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
 
 class ChoiceRow(Gtk.ListBoxRow):
     """Row representing a single choice"""
-    def __init__(self, value, is_default, capitalize=False) -> None:
+    def __init__(self, value, is_default, capitalize: bool = False) -> None:
         Gtk.ListBoxRow.__init__(self)
 
         self.value, self.is_default = value, is_default
@@ -890,7 +890,7 @@ class FileSizeRange(Gtk.Grid):
         return self._min_wdgt.get_bytes()
 
     @min_value.setter
-    def min_value(self, val):
+    def min_value(self, val) -> None:
         """Set the minimum value."""
         self._min_wdgt.set_bytes(val)
 
@@ -900,7 +900,7 @@ class FileSizeRange(Gtk.Grid):
         return self._max_wdgt.get_bytes()
 
     @max_value.setter
-    def max_value(self, val):
+    def max_value(self, val) -> None:
         """Set the maximum value."""
         self._max_wdgt.set_bytes(val)
 

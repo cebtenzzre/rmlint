@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import logging.handlers
+from typing import Any
 
 
 COLORED_FORMAT: str = "%(asctime)s%(reset)s %(log_color)s[logsymbol] \
@@ -31,7 +32,7 @@ UNICODE_ICONS: dict[int, str] = {
 }
 
 
-def create_logger(name=None, path=None, verbosity=logging.DEBUG) -> logging.Logger:
+def create_logger(name: Any | None = None, path: Any | None = None, verbosity=logging.DEBUG) -> logging.Logger:
     '''Create a new Logger configured with moosecat's defaults.
 
     :name: A user-define name that describes the logger

@@ -73,7 +73,7 @@ class ViewSwitcher(Gtk.Box):
         idx = max(0, min(len(self._stack) - 1, idx))
         return list(self._stack)[idx]
 
-    def _set_widget_at(self, _=None, step=+1) -> None:
+    def _set_widget_at(self, _: Any | None = None, step: int = +1) -> None:
         """Step right (or left if step is negative) from current view"""
 
         if self._switch_to_previous_next:
@@ -87,7 +87,7 @@ class ViewSwitcher(Gtk.Box):
         self._set_visible_child(next_widget)
         self._update_sensitivness()
 
-    def _set_visible_child(self, child, update_prev=True) -> None:
+    def _set_visible_child(self, child, update_prev: bool = True) -> None:
         """Set and notify about the changed view"""
         prev = self._stack.get_visible_child()
         self._stack.set_visible_child(child)
@@ -178,7 +178,7 @@ class HeaderBar(Gtk.HeaderBar):
         self.set_size_request(-1, 46)
 
 
-def _create_item(name, action, icon, variant=None) -> Any:
+def _create_item(name, action, icon, variant: Any | None = None) -> Any:
     """Create a GMenuItem from an action, optionally with an icon"""
     if variant is not None:
         name = '{n} ({v})'.format(n=name, v=str(variant))

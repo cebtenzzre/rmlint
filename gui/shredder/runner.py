@@ -141,7 +141,7 @@ def map_cfg(option, val) -> Any:
 
 
 def _create_rmlint_process(
-        cfg, cwd, untagged, tagged, replay_path=None, outputs=None
+        cfg, cwd, untagged, tagged, replay_path: Any | None = None, outputs: Any | None = None
 ) -> Any:
     """Create a correctly configured rmlint GSuprocess for gui purposes.
     If `replay_path` is not None, "--replay `replay_path`" will be appended.

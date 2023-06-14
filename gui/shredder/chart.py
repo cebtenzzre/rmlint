@@ -40,7 +40,7 @@ ANGLE_LIMIT_VISIBLE: float = math.pi / 256
 ###########################################################
 
 
-def _draw_center_text(ctx, x, y, text, font_size=10, do_draw=True) -> tuple[Any, Any]:
+def _draw_center_text(ctx, x, y, text, font_size: int = 10, do_draw: bool = True) -> tuple[Any, Any]:
     '''Draw a text at the center of ctx/alloc.
 
     ctx: a cairo Context to draw to
@@ -473,7 +473,7 @@ class RingChart(Chart):
         self.queue_draw()
         self._timeout_id = None
 
-    def _hit(self, area, event, click_only=False) -> tuple[bool, Segment | None]:
+    def _hit(self, area, event, click_only: bool = False) -> tuple[bool, Segment | None]:
         """Check what segments were hitten by a GdkEvent"""
         alloc = area.get_allocation()
         mid_x, mid_y = alloc.width / 2, alloc.height / 2

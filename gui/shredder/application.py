@@ -52,7 +52,7 @@ def have_feature(feature) -> bool:
     return '+' + feature in data
 
 
-def _create_action(name, callback=None) -> Any:
+def _create_action(name, callback: Any | None = None) -> Any:
     """Create a named GAction with a callback for its activation"""
     action = Gio.SimpleAction.new(name, None)
     if callback is not None:

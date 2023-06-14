@@ -794,7 +794,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         self.do_set_sort_column_id(id_, order)
 
 
-def _create_column(title, id_, renderers, fixed_width=100) -> Any:
+def _create_column(title, id_, renderers, fixed_width: int = 100) -> Any:
     """Convenience method for creating a TreeView Column.
     Several renderers can be given with certain options.
     """

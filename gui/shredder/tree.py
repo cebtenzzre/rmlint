@@ -40,18 +40,10 @@ from shredder.util import PopupMenu, NodeState
 
 from shredder.query import Query
 
-SIZE: int
-COUNT: int
-MTIME: int
-TAG: int
-CKSUM: int
-PATH: int
-TOOLTIP: int
-
 _T0 = TypeVar('_T0')
 _T2 = TypeVar('_T2')
-_TPathNode = TypeVar('_TPathNode', bound=PathNode)
-_TPathTreeModel = TypeVar('_TPathTreeModel', bound=PathTreeModel)
+_TPathNode = TypeVar('_TPathNode', bound='PathNode')
+_TPathTreeModel = TypeVar('_TPathTreeModel', bound='PathTreeModel')
 
 
 LOGGER: logging.Logger = logging.getLogger('tree')
@@ -172,7 +164,7 @@ class PathNode:
             parent.row[Column.COUNT] += 1
             parent.row[Column.SIZE] += row[Column.SIZE]
 
-    def up(self) -> Generator[PathNode, Any, None]:
+    def up(self) -> Generator['PathNode', Any, None]:
         """Iterate the trie up to root."""
         yield self
         if self.parent is not None:
@@ -273,7 +265,7 @@ class PathTrie(GObject.Object):
     def __setitem__(self, path, value) -> None:
         self.insert(path, value)
 
-    def iterate(self, node: _T0=None) -> Generator[PathNode | _T0, Any, None]:
+    def iterate(self, node: _T0 | None = None) -> Generator[PathNode | _T0, Any, None]:
         """Iterate trie down from node.
         If node is None, root is assumed;
         """

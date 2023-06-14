@@ -183,14 +183,14 @@ VALID_ATTRS: dict[str, Callable[[Any], Any]] = {
     'count': parse_count
 }
 
-ATTR_PATTERN: re.Pattern = re.compile(
+ATTR_PATTERN: re.Pattern[str] = re.compile(
     r'({attrs}):(.*?)(?=\s|$)'.format(
         attrs='|'.join(VALID_ATTRS.keys())
     )
 )
 
 
-def parse(query) -> defaultdict:
+def parse(query: str) -> defaultdict:
     """Actual lowlevel parsing function.
     Extracts arbitrary text and attr-value pairs.
     """

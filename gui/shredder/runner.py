@@ -20,39 +20,12 @@ import logging
 import tempfile
 
 from enum import Enum
-from typing import Any, ClassVar, NoReturn
+from typing import Any, ClassVar
 
 # External:
 from gi.repository import Gio
 from gi.repository import GLib
 from gi.repository import GObject
-
-SPOOKY: int
-CITY: int
-SHA1: int
-SHA256: int
-SHA512: int
-SHA3: int
-MD5: int
-BLAKE2B: int
-BLAKE2S: int
-PARANOID: int
-NONE: int
-BASENAME: int
-EXTENSION: int
-WITHOUT_EXTENSION: int
-IGNORE: int
-SEE: int
-FOLLOW: int
-PARTIAL: int
-TAGGED: int
-UNTAGGED: int
-OFF: bool
-ACTIVE: bool
-REMOVE_DUPES: int
-LINK_DUPES: int
-SYMLINK_DUPES: int
-HARDLINK_DUPES: int
 
 
 LOGGER: logging.Logger = logging.getLogger('runner')
@@ -532,7 +505,7 @@ class Script(GObject.Object):
         self._stream = None
         self._queue_read()
 
-    def _queue_read(self) -> NoReturn:
+    def _queue_read(self) -> None:
         """Schedule a read from rmlint's stdout stream."""
         if self._stream is None:
             assert self._process is not None

@@ -308,7 +308,8 @@ class PathTrie(GObject.Object):
 
         curr.make_leaf(row)
 
-        self._groups[row[Column.CKSUM]].append(curr)
+        cksum = cast(int, row[Column.CKSUM])
+        self._groups[cksum].append(curr)
         self.max_depth = max(self.max_depth, curr.depth)
         return new_nodes
 

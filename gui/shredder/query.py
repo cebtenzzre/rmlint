@@ -11,6 +11,8 @@ This is a valid example for example:
 """
 
 # Stdlib:
+from __future__ import annotations
+
 import re
 import logging
 from collections import defaultdict

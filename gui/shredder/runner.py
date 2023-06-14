@@ -11,6 +11,8 @@ The settings are described and defined in the settings schema.
 """
 
 # Stdlib:
+from __future__ import annotations
+
 import os
 import re
 import json

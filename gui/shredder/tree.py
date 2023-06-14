@@ -16,6 +16,8 @@ If you don't find it, that's good. If you do, blame @sahib.
 """
 
 # Stdlib:
+from __future__ import annotations
+
 import os
 import time
 import logging
@@ -159,7 +161,7 @@ class PathNode:
             parent.row[Column.COUNT] += 1
             parent.row[Column.SIZE] += row[Column.SIZE]
 
-    def up(self) -> Generator['PathNode', Any, None]:
+    def up(self) -> Generator[PathNode, Any, None]:
         """Iterate the trie up to root."""
         yield self
         if self.parent is not None:

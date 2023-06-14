@@ -8,6 +8,8 @@ The chart is drawn via cairo and a tiny bit of math.
 
 
 # Stdlib:
+from __future__ import annotations
+
 import math
 import colorsys
 from typing import Any

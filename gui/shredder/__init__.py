@@ -3,6 +3,8 @@
 
 """Common constants."""
 
+from __future__ import annotations
+
 import gi
 
 gi.require_version('Gtk', '3.0')

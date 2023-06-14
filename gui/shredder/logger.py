@@ -8,6 +8,8 @@ It has colors and symbols! Enough reasoning.
 
 
 # Stdlib:
+from __future__ import annotations
+
 import logging
 import logging.handlers
 

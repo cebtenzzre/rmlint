@@ -8,6 +8,8 @@ the gui build by instancing the MainWindow.
 """
 
 # Stdlib:
+from __future__ import annotations
+
 import os
 import sys
 import gettext

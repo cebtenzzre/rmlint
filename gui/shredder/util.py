@@ -72,6 +72,7 @@ def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED) -> s
     sctx = widget.get_style_context()
     if background:
         color = sctx.get_background_color(state)
+        return None
     else:
         color = sctx.get_color(state)
         return '#{r:0^2x}{g:0^2x}{b:0^2x}'.format(
@@ -203,7 +204,7 @@ class View(Gtk.Grid):
         self._app = app
         self._sub_title = sub_title or ''
         self._is_visible = False
-        self._header_widgets = []
+        self._header_widgets: list[Gtk.Widget] = []
 
         self.progressbar = Gtk.ProgressBar()
         self.progressbar.set_name('ShredderProgress')
@@ -435,6 +436,7 @@ def pretty_seconds(second_diff) -> str | None:
         return "an hour ago"
     elif second_diff < 86400:
         return _rnd(second_diff / 3600) + " hours ago"
+    return None
 
 
 def pretty_date(time=False) -> Any:
@@ -568,7 +570,7 @@ class CellRendererLint(Gtk.CellRendererPixbuf):
         ctx.move_to(cell.x - fw + xpad, cell.y + fh + ypad)
         PangoCairo.show_layout(ctx, layout)
 
-    def do_get_size(self, _, cell_area) -> tuple[Any, Any, Any, Any]:
+    def do_get_size(self, widget, cell_area=None) -> tuple[Any, Any, Any, Any]:
         xpad = self.get_property('xpad')
         width = height = xpad * 2 + CellRendererLint.ICON_SIZE
 

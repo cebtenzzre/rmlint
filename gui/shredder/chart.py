@@ -261,7 +261,6 @@ class Segment:
     """Helper and data class for a single segment in a RingChart."""
     def __init__(self, node, layer, degree, size, tooltip=None) -> None:
         self.node = node
-        self.children = []
         self.layer, self.degree, self.size = layer, degree, size
         self.degree = math.fmod(self.degree, math.pi * 2)
         self.is_selected = False
@@ -332,8 +331,8 @@ class RingChart(Chart):
         Chart.__init__(self)
 
         # Id of the tooltip timeout
-        self._timeout_id = None
-        self._segment_list = []
+        self._timeout_id: int | None = None
+        self._segment_list: list[Segment] = []
         self.max_layers = 0
         self.total_size = 1
         self._selected_segment = None
@@ -472,7 +471,7 @@ class RingChart(Chart):
         self.queue_draw()
         self._timeout_id = None
 
-    def _hit(self, area, event, click_only=False) -> tuple[bool, None]:
+    def _hit(self, area, event, click_only=False) -> tuple[bool, Segment | None]:
         """Check what segments were hitten by a GdkEvent"""
         alloc = area.get_allocation()
         mid_x, mid_y = alloc.width / 2, alloc.height / 2

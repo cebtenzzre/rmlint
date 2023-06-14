@@ -9,7 +9,7 @@ Shows the chart and a treeview of suspicious files.
 
 # Stdlib:
 import logging
-from typing import Any, NoReturn
+from typing import Any
 
 # External:
 from gi.repository import Gtk
@@ -131,7 +131,7 @@ class RunnerView(View):
         View.__init__(self, app, 'Running…')
 
         # Public: The runner.
-        self.runner = None
+        self.runner: Runner | None = None
 
         self.last_paths: tuple[()] | tuple[list[str], list[str]] = ()
 
@@ -252,10 +252,10 @@ class RunnerView(View):
         self.sub_title = 'Running…'
 
         # Fork off the rmlint process:
-        self.runner = Runner(self.app.settings, untagged_paths, tagged_paths)
-        self.runner.connect('lint-added', self.on_add_elem)
-        self.runner.connect('process-finished', self.on_process_finish)
-        self.runner.run()
+        self.runner = runner = Runner(self.app.settings, untagged_paths, tagged_paths)
+        runner.connect('lint-added', self.on_add_elem)
+        runner.connect('process-finished', self.on_process_finish)
+        runner.run()
 
         # Make sure the previous run is not visible anymore:
         self.model = PathTreeModel(untagged_paths + tagged_paths)
@@ -398,7 +398,7 @@ class RunnerView(View):
             self.group_revealer.set_reveal_child(False)
             self.chart_stack.render(node)
 
-    def _generate_script(self, trie, nodes) -> NoReturn:
+    def _generate_script(self, trie, nodes) -> None:
         """Do the actual generation work, starting at `node` in `trie`."""
         self._script_generated = True
 
@@ -416,11 +416,11 @@ class RunnerView(View):
         self.app_window.views.go_right.set_sensitive(True)
         self.app_window.views.switch('editor')
 
-    def on_generate_script(self, _) -> NoReturn:
+    def on_generate_script(self, _) -> None:
         """Generate the full script."""
         self._generate_script(self.model.trie, [self.model.trie.root])
 
-    def on_generate_filtered_script(self, _) -> NoReturn:
+    def on_generate_filtered_script(self, _) -> None:
         """Generate the script with only the visible content."""
         model = self.treeview.get_model()
         self._generate_script(model.trie, [model.trie.root])

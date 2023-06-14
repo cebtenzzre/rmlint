@@ -21,7 +21,7 @@ try:
     from parsedatetime import Calendar
     HAS_PARSEDATETIME: bool = True
 except ImportError:
-    HAS_PARSEDATETIME: bool = False
+    HAS_PARSEDATETIME = False
 
 
 LOGGER: logging.Logger = logging.getLogger('query')

@@ -28,6 +28,8 @@ from gi.repository import GLib
 from gi.repository import GObject
 
 
+JsonDict = dict[str, str | float | dict[str, Any] | list[Any]]
+
 LOGGER: logging.Logger = logging.getLogger('runner')
 ASCII_COLOR_REGEX: re.Pattern = re.compile(r'\x1B\[\d+(.*?)m')
 
@@ -240,14 +242,18 @@ class Runner(GObject.Object):
         self.settings = settings
         self.tagged_paths = tagged_paths
         self.untagged_paths = untagged_paths
-        self._data_stream = self.process = self._message = None
+        self._data_stream: Gio.DataInputStream | None = None
+        self.process: Gio.Subprocess | None = None
+        self._message: str | None = None
 
         # Temporary directory for storing formatted files
         self._tmpdir = tempfile.TemporaryDirectory(prefix='shredder-')
 
         # Metadata about the run:
-        self.element, self.header, self.footer = {}, {}, {}
-        self.objects = []
+        self.element: JsonDict = {}
+        self.header: JsonDict = {}
+        self.footer: JsonDict = {}
+        self.objects: list[JsonDict] = []
         self.was_replayed = False
 
     def on_process_termination(self, process, result) -> None:
@@ -283,6 +289,7 @@ class Runner(GObject.Object):
         if self.process is None:
             return
 
+        assert self._data_stream is not None
         self._data_stream.read_line_async(
             io_priority=GLib.PRIORITY_HIGH,
             cancellable=None,
@@ -328,16 +335,16 @@ class Runner(GObject.Object):
         Returns: a `Script` instance.
         """
         self.was_replayed = False
-        self.process = _create_rmlint_process(
+        self.process = process = _create_rmlint_process(
             self.settings, self._tmpdir.name,
             self.untagged_paths, self.tagged_paths
         )
         self._data_stream = Gio.DataInputStream.new(
-            self.process.get_stdout_pipe()
+            process.get_stdout_pipe()
         )
 
         # We want to get notified once the child dies
-        self.process.wait_check_async(None, self.on_process_termination)
+        process.wait_check_async(None, self.on_process_termination)
 
         # Schedule some reads from stdout (where the json gets written)
         self._queue_read()
@@ -463,7 +470,9 @@ class Script(GObject.Object):
 
     def __init__(self, script_file) -> None:
         GObject.Object.__init__(self)
-        self._incomplete_chunk = self._process = self._stream = None
+        self._incomplete_chunk = None
+        self._process: Gio.Subprocess | None = None
+        self._stream: Gio.DataInputStream | None = None
         self.script_file = script_file
 
     @staticmethod

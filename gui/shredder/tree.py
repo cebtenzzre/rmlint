@@ -40,11 +40,6 @@ from shredder.util import PopupMenu, NodeState
 
 from shredder.query import Query
 
-_T0 = TypeVar('_T0')
-_T2 = TypeVar('_T2')
-_TPathNode = TypeVar('_TPathNode', bound='PathNode')
-_TPathTreeModel = TypeVar('_TPathTreeModel', bound='PathTreeModel')
-
 
 LOGGER: logging.Logger = logging.getLogger('tree')
 
@@ -73,7 +68,7 @@ class Column:
     TYPES: list[type[float | int | str]] = [float, int, int, int, int, str, str]
 
     @staticmethod
-    def make_row(md_map: dict[str, Any]) -> list[float | NodeState | str]:
+    def make_row(md_map: dict[str, Any]) -> list[Any]:
         """Convert an rmlint json dict to a tree row"""
         is_original = md_map.get('is_original', False)
         if md_map.get('type', '').startswith('duplicate_'):
@@ -136,7 +131,7 @@ class PathNode:
         else:
             return self.row[idx]
 
-    def append(self: _TPathNode, name) -> _TPathNode:
+    def append(self: PathNode, name) -> PathNode:
         """Append a node as child of this node.
 
         If is_leaf is True the size/count of all intermediate
@@ -243,7 +238,7 @@ class PathTrie(GObject.Object):
             # Also add it to the "special" index.
             _create_root_path_index(self.root_paths, root_path, sub_root_node)
 
-        self._groups = defaultdict(list)
+        self._groups: defaultdict[int, list[PathNode]] = defaultdict(list)
 
     def __iter__(self) -> Generator[PathNode, Any, None]:
         return self.iterate(None)
@@ -265,11 +260,12 @@ class PathTrie(GObject.Object):
     def __setitem__(self, path, value) -> None:
         self.insert(path, value)
 
-    def iterate(self, node: _T0 | None = None) -> Generator[PathNode | _T0, Any, None]:
+    def iterate(self, node: PathNode | None = None) -> Generator[PathNode, Any, None]:
         """Iterate trie down from node.
         If node is None, root is assumed;
         """
         node = node or self.root
+        assert node is not None
         yield node
 
         for child in node.indices:
@@ -342,7 +338,7 @@ class PathTrie(GObject.Object):
 
         return curr
 
-    def sort(self, column_id, reverse=False, root: _T2=None) -> Generator[tuple[PathNode | _T2, list], Any, None]:
+    def sort(self, column_id, reverse=False, root: PathNode | None = None) -> Generator[tuple[PathNode, list], Any, None]:
         """Sort the trie nodes by their value in at `column_id`.
         If reverse is True, bigger values appear first.
 
@@ -384,7 +380,7 @@ class PathTrie(GObject.Object):
         return False
 
 
-def make_iter(node) -> Any:
+def make_iter(node) -> Gtk.TreeIter:
     """Make a GtkTreeIter, suitable for our PathTreeModel."""
     iter_ = Gtk.TreeIter()
     iter_.stamp = PATH_MODEL_STAMP
@@ -417,12 +413,14 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
         # Pack of files that are inserted to the trie at once.
         # This is a speed optimization to make the ui less blocking.
-        self._file_pack, self._pack_timeout_id = [], None
+        self._file_pack: list[tuple[str, dict[str, Any]]] = []
+        self._pack_timeout_id: int | None = None
 
         # Search optimization:
         # When typing '.pyo' after searching for '.py' we
         # can just filter the previous results.
-        self._partial_model, self._last_query = None, None
+        self._partial_model: PathTreeModel | None = None
+        self._last_query: Query | None = None
 
         # Last column we sorted by or None (needed for GtkTreeSortable)
         self._sort_last_id = None
@@ -431,8 +429,8 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         # Set of nodes that need to get updated periodically.
         # It would be expensive to do that on every insert
         # (causing one row redraw each), therefore we do it every second.
-        self._intermediate_nodes = set()
-        self._mtime_cache = set()
+        self._intermediate_nodes: set[PathNode] = set()
+        self._mtime_cache: set[int] = set()
         GLib.timeout_add(1000, self._update_intermediate_nodes)
 
         # A node was updated from the outside, i.e. by another model,
@@ -540,7 +538,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
     #     Filter Implementation      #
     ##################################
 
-    def filter_model(self: _TPathTreeModel, term) -> _TPathTreeModel:
+    def filter_model(self: PathTreeModel, term) -> PathTreeModel | None:
         """Filter the model (and thus update the view) by `query`.
         Instead of modifying the model, a new model is returned,
         which shows only contains the filtered nodes.
@@ -559,7 +557,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
         query = Query.parse(term)
         if query is None:
-            return
+            return None
 
         # Find out which trie to filter.
         # If we had a search query with matching prefix before we can just
@@ -641,7 +639,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
         else:
             return (False, None)
 
-    def _iter_move(self, iter_: _T0, offset) -> tuple[bool, _T0 | None]:
+    def _iter_move(self, iter_: Gtk.TreeIter, offset) -> tuple[bool, Gtk.TreeIter | None]:
         """Move iter_ by a certain offset."""
         node = self.trie.nodes[iter_.user_data]
         next_node = node.neighbor(offset)
@@ -652,14 +650,14 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
             iter_.user_data = id(next_node)
             return (True, iter_)
 
-    def do_iter_next(self, iter_: _T0) -> tuple[bool, _T0 | None]:
+    def do_iter_next(self, iter_: Gtk.TreeIter) -> tuple[bool, Gtk.TreeIter | None]:
         """Returns an iter pointing to the next row or None.
 
         The implementation returns a 2-tuple (bool, TreeIter|None).
         """
         return self._iter_move(iter_, +1)
 
-    def do_iter_previous(self, iter_: _T0) -> tuple[bool, _T0 | None]:
+    def do_iter_previous(self, iter_: Gtk.TreeIter) -> tuple[bool, Gtk.TreeIter | None]:
         """Returns an iter pointing to the previous row or None.
 
         The implementation returns a 2-tuple (bool, TreeIter|None).
@@ -864,12 +862,12 @@ class PathTreeView(Gtk.TreeView):
         )
 
         # Shut up, pylint.
-        self._menu = None
+        self._menu: PopupMenu | None = None
 
     def get_model(self) -> PathTreeModel:
         return cast(PathTreeModel, super().get_model())
 
-    def set_model(self, model) -> None:
+    def set_model(self, model=None) -> None:
         """Overwrite Gtk.TreeView.set_model, but expand sub root paths"""
         Gtk.TreeView.set_model(self, model)
         self.expand_all()
@@ -905,19 +903,19 @@ class PathTreeView(Gtk.TreeView):
     def on_show_menu(self) -> PopupMenu:
         """Called during the button-press-event to show the actual menu."""
         # HACK: bind to self, since the ref would get lost.
-        self._menu = PopupMenu()
-        self._menu.simple_add('Toggle all', self.on_toggle_all)
-        self._menu.simple_add('Toggle selected', self.on_toggle_selected)
-        self._menu.simple_add_separator()
-        self._menu.simple_add('Expand all', self.on_expand_all)
-        self._menu.simple_add('Collapse all', self.on_collapse_all)
-        self._menu.simple_add_separator()
-        self._menu.simple_add('Open item', self.on_open_folder)
-        self._menu.simple_add(
+        self._menu = menu = PopupMenu()
+        menu.simple_add('Toggle all', self.on_toggle_all)
+        menu.simple_add('Toggle selected', self.on_toggle_selected)
+        menu.simple_add_separator()
+        menu.simple_add('Expand all', self.on_expand_all)
+        menu.simple_add('Collapse all', self.on_collapse_all)
+        menu.simple_add_separator()
+        menu.simple_add('Open item', self.on_open_folder)
+        menu.simple_add(
             'Copy path to clipboard',
             self.on_copy_to_clipboard
         )
-        return self._menu
+        return menu
 
     def on_open_folder(self, _) -> None:
         """Open the selected item or folder via xdg-open."""

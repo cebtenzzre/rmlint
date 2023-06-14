@@ -102,7 +102,7 @@ def choice_widget(settings, key_name, summary, _) -> MultipleChoiceButton | None
     range_type, range_variant = key.get_range()
     if range_type != 'enum':
         LOGGER.warning('%s is not an enum.', key_name)
-        return
+        return None
 
     choices = list(range_variant)
     button = MultipleChoiceButton(choices, default, selected)
@@ -149,8 +149,8 @@ class SettingsView(View):
         self.add(self._grid)
 
         self.save_settings = False
-        self.sections = {}
-        self.metadata = {}
+        self.sections: dict[str, Gtk.ListBox] = {}
+        self.metadata: dict[str, dict[str, Any]] = {}
 
         self.appy_btn = SuggestedButton()
         self.deny_btn = DestructiveButton('Reset to defaults')
@@ -359,13 +359,15 @@ class SettingsView(View):
         self.save_settings = True
         self.app_window.views.switch_to_previous()
 
+    def _reset_timeout_cb(self) -> None:
+        self.reset_to_defaults()
+        self.app.settings.delay()
+
     def on_reset_to_defaults(self, *_) -> None:
         """Callback for the reset button."""
         self.app.settings.revert()
 
-        GLib.timeout_add(
-            100, lambda: self.reset_to_defaults() or self.app.settings.delay()
-        )
+        GLib.timeout_add(100, self._reset_timeout_cb)
 
         self.save_settings = False
         self.app_window.views.switch_to_previous()

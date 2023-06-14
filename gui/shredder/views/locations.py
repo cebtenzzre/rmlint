@@ -15,7 +15,7 @@ Also show the directory size alongside.
 import os
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 # External:
 from gi.repository import Gtk
@@ -246,8 +246,8 @@ class LocationView(View):
     """The actual view instance."""
     def __init__(self, app) -> None:
         View.__init__(self, app)
-        self.selected_locations = []
-        self.known_paths = set()
+        self.selected_locations: list[LocationEntry] = []
+        self.known_paths: set[str] = set()
         self._set_title()
 
         self.box = Gtk.ListBox()
@@ -427,11 +427,11 @@ class LocationView(View):
         path = path.strip()
 
         if path == '/':
-            return
+            return None
 
         if path in self.known_paths:
             LOGGER.info('In known paths: ' + path)
-            return
+            return None
 
         entry = LocationEntry(name, path, icon, fill_level)
         self.known_paths.add(path)
@@ -451,7 +451,7 @@ class LocationView(View):
     def cache_saved_entries(self) -> None:
         entries = []
         for child in self.box.get_children():
-            entries.append(child.to_dict())
+            entries.append(cast(LocationEntry, child).to_dict())
 
         store_saved_entries(entries)
 

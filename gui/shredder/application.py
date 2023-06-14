@@ -12,7 +12,7 @@ import os
 import sys
 import gettext
 import logging
-from typing import Any, NoReturn
+from typing import Any
 
 # External:
 from gi.repository import Gtk, Gio, Rsvg, GdkPixbuf
@@ -78,7 +78,8 @@ class Application(Gtk.Application):
             flags=Gio.ApplicationFlags.FLAGS_NONE
         )
         self.cmd_opts = options
-        self.settings = self.win = None
+        self.settings: Gio.Settings | None = None
+        self.win: MainWindow | None = None
 
         # Check compile time features of rmlint that we need later.
         if not have_feature('replay'):
@@ -87,7 +88,7 @@ class Application(Gtk.Application):
             LOGGER.error('…and `json-glib-1.0` installed on your system.')
             sys.exit(-1)
 
-    def do_activate(self, **kw) -> NoReturn:
+    def do_activate(self, **kw) -> None:
         Gtk.Application.do_activate(self, **kw)
         assert self.win is not None
         self.win.present()

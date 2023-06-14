@@ -26,7 +26,7 @@ from gi.repository import GObject
 try:
     from gi.repository import Polkit
 except ImportError:
-    Polkit: Any = None
+    Polkit = None
 
 # Internal:
 from shredder.util import View, IconButton, scrolled, size_to_human_readable
@@ -73,7 +73,7 @@ try:
             self.ctx = GtkSource.SearchContext.new(buffer_, settings)
             self.ctx.set_highlight(True)
             self.ctx.set_match_style(GtkSource.Style(underline=True))
-            self._last_mark = None
+            self._last_mark: Gtk.TextMark | None = None
 
         @property
         def query(self):
@@ -624,7 +624,7 @@ class EditorView(View):
         paned.props.position = 920
         self.add(paned)
 
-        self._last_search = None
+        self._last_search: _SearchRun | None = None
         self.search_entry.connect(
             'search-changed', self.on_search_changed
         )

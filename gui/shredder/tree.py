@@ -416,7 +416,7 @@ class PathTreeModel(GObject.GObject, Gtk.TreeModel, Gtk.TreeSortable):
 
         # Pack of files that are inserted to the trie at once.
         # This is a speed optimization to make the ui less blocking.
-        self._file_pack: list[tuple[str, dict[str, Any]]] = []
+        self._file_pack: list[tuple[str, list[Any]]] = []
         self._pack_timeout_id: int | None = None
 
         # Search optimization:

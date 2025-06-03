@@ -518,7 +518,7 @@ AddOption(
     action='store', metavar='DIR', help='libdir name (lib or lib64)'
 )
 
-for suffix in ['libelf', 'gettext', 'fiemap', 'blkid', 'json-glib', 'gui']:
+for suffix in ['libelf', 'gettext', 'fiemap', 'blkid', 'json-glib']:
     AddOption(
         '--without-' + suffix, action='store_const', default=False, const=False,
         dest='with_' + suffix
@@ -812,7 +812,6 @@ env.Default(library)
 SConscript('tests/SConscript', exports='programs')
 SConscript('po/SConscript')
 SConscript('docs/SConscript')
-SConscript('gui/SConscript')
 
 
 def build_tar_gz(target=None, source=None, env=None):

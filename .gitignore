@@ -25,7 +25,6 @@ lib/config.h
 lib/formats/py.c
 lib/formats/sh.c
 uninstall-
-gui/app/resources/app.gresource
 *.a
 
 rmlint.*.sh
